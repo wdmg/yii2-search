@@ -1,0 +1,43 @@
+{
+  "name": "wdmg/yii2-search",
+  "description": "Site search",
+  "keywords": ["yii2", "yii2-search", "search", "live search", "wdmg"],
+  "type": "yii2-extension",
+  "license": "MIT",
+  "version": "1.0.1",
+  "homepage": "https://github.com/wdmg/yii2-search",
+  "support": {
+    "source": "https://github.com/wdmg/yii2-search",
+    "issues": "https://github.com/wdmg/yii2-search/issues"
+  },
+  "authors": [
+    {
+      "name": "Alexsander Vyshnyvetskyy",
+      "email": "alex.vyshnyvetskyy@gmail.com"
+    },
+    {
+      "name": "W.D.M.Group, Ukraine",
+      "email": "wdmg.com.ua@gmail.com"
+    }
+  ],
+  "require": {
+    "yiisoft/yii2": "^2.0.20",
+    "wdmg/yii2-base": "^1.1.6"
+  },
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "wdmg\\search\\": ""
+    }
+  },
+  "extra": {
+    "options": {
+      "routePrefix": "admin",
+      "supportModels": {
+        "news": "wdmg\\news\\models\\News",
+        "pages": "wdmg\\pages\\models\\Pages"
+      },
+      "cacheExpire": 86400
+    }
+  }
+}
