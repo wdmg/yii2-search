@@ -46,11 +46,27 @@ class Module extends BaseModule
     public $description = "Site search";
 
     /**
-     * @var array list of supported models for autoindexing
+     * @var array list of supported models for live search and indexation
      */
     public $supportModels = [
-        'news' => 'wdmg\news\models\News',
-        'pages' => 'wdmg\pages\models\Pages',
+        'news' => [
+            'class' => 'wdmg\news\models\News',
+            'fields' => [
+                'title',
+                'keywords',
+                'description',
+                'content'
+            ],
+        ],
+        'pages' => [
+            'class' => 'wdmg\pages\models\Pages',
+            'fields' => [
+                'title',
+                'keywords',
+                'description',
+                'content'
+            ]
+        ],
     ];
 
     /**

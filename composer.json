@@ -34,8 +34,24 @@
     "options": {
       "routePrefix": "admin",
       "supportModels": {
-        "news": "wdmg\\news\\models\\News",
-        "pages": "wdmg\\pages\\models\\Pages"
+        "news": {
+          "class": "wdmg\\news\\models\\News",
+          "fields": [
+            "title",
+            "keywords",
+            "description",
+            "content"
+          ]
+        },
+        "pages": {
+          "class": "wdmg\\pages\\models\\Pages",
+          "fields": [
+            "title",
+            "keywords",
+            "description",
+            "content"
+          ]
+        }
       },
       "cacheExpire": 86400
     }
