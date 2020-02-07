@@ -20,6 +20,7 @@ use wdmg\base\BaseModule;
 use yii\base\InvalidConfigException;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
+use yii\helpers\Html;
 
 /**
  * RSS-feed module definition class
@@ -221,4 +222,62 @@ class Module extends BaseModule
         }
     }
 
+    public function generateSnippets($content = null, $keywords = null, $options = [], $withBase = true)
+    {
+
+        $snippets = [];
+        if (!empty($content) && is_array($keywords)) {
+
+            foreach ($keywords as $keyword) {
+                $count_in = 0;
+
+                $min_words_before = 2;
+                $max_words_before = (isset($options['before'])) ? $options['before'] : 6;
+                $words_before = $min_words_before . ',' . intval($max_words_before);
+
+                $min_words_after = 2;
+                $max_words_after = (isset($options['after'])) ? $options['after'] : 4;
+                $words_after = $min_words_after . ',' . intval($max_words_after);
+
+                preg_match_all('/(?:\w+){' . $words_before . '}\s+((?:\b' . $keyword . '*?)\w+)\s+(?:\w+){' . $words_after . '}/iu', $content, $matches, PREG_OFFSET_CAPTURE);
+                foreach ($matches as $key => $match) {
+
+
+                    foreach ($match as $part) {
+
+                        if ($count_in >= 3)
+                            continue;
+
+                        if ($tag = $options['tag'])
+                            $snippet = preg_replace('/(?:\b' . $keyword . '*?)\w+/iu', Html::tag($tag, '$0'), $part[0]);
+
+                        //$snippet = preg_replace('/(?:\b' . $keyword . '*?)\w+/iu', Html::tag($tag, '$0', (isset($options['tag_options'])) ? $options['tag_options'] : false), $part[0]);
+
+                        if (!empty($snippet)) {
+                            if (empty($snippets)) {
+                                
+                                if ($withBase)
+                                    $snippets[$keyword][] = mb_convert_case(mb_substr(trim($snippet), 0, 1), MB_CASE_TITLE) . mb_substr(trim($snippet), 1);
+                                else
+                                    $snippets[] = mb_convert_case(mb_substr(trim($snippet), 0, 1), MB_CASE_TITLE) . mb_substr(trim($snippet), 1);
+
+                            } else {
+
+                                if ($withBase)
+                                    $snippets[$keyword][] = trim($snippet);
+                                else
+                                    $snippets[] = trim($snippet);
+
+                            }
+
+                            $count_in++;
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return $snippets;
+    }
 }
