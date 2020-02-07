@@ -14,6 +14,7 @@ namespace wdmg\search;
  *
  */
 
+use wdmg\search\models\Search;
 use Yii;
 use wdmg\base\BaseModule;
 use yii\base\InvalidConfigException;
@@ -51,20 +52,38 @@ class Module extends BaseModule
     public $supportModels = [
         'news' => [
             'class' => 'wdmg\news\models\News',
-            'fields' => [
-                'title',
-                'keywords',
-                'description',
-                'content'
+            'indexing' => [
+                'on_insert' => true,
+                'on_update' => true,
+                'on_delete' => true
             ],
+            'options' => [
+                'title' => 'title',
+                'url' => 'url',
+                'fields' => [
+                    'title',
+                    'keywords',
+                    'description',
+                    'content'
+                ]
+            ]
         ],
         'pages' => [
             'class' => 'wdmg\pages\models\Pages',
-            'fields' => [
-                'title',
-                'keywords',
-                'description',
-                'content'
+            'indexing' => [
+                'on_insert' => true,
+                'on_update' => true,
+                'on_delete' => true
+            ],
+            'options' => [
+                'title' => 'title',
+                'url' => 'url',
+                'fields' => [
+                    'title',
+                    'keywords',
+                    'description',
+                    'content'
+                ]
             ]
         ],
     ];
@@ -72,7 +91,30 @@ class Module extends BaseModule
     /**
      * @var int live search cache lifetime, `0` - for not use cache
      */
-    public $cacheExpire = 86400; // 1 day.
+    public $cacheExpire = 86400; // 86400 1 day.
+
+    public $morphology = 'phpMorphy';
+
+    public $indexingOptions = [
+        'processing' => 'phpMorphy', //  Set `phpMorphy` or `LinguaStem` (not realized et)
+        'analyze_by' => 'relevance',
+        'max_execution_time' => 0, // max execution time in sec. for indexing process
+        'max_words' => 50,
+    ];
+
+    public $analyzerOptions = [ // @See \wdmg\helpers\TextAnalyzer
+        'min_length' => 2,
+        'stop_words' => [],
+        'weights' => []
+    ];
+
+    public $snippetOptions = [
+        'max_words_before' => 6,
+        'max_words_after' => 4,
+        'bolder_tag' => 'strong',
+        'max_length' => 255,
+        'delimiter' => '…'
+    ];
 
     /**
      * @var string the module version
@@ -139,26 +181,44 @@ class Module extends BaseModule
             throw new InvalidConfigException("Module property `cacheExpire` must be integer.");
 
         // Attach to events of create/change/remove of models for the search indexing
-        /*if (!($app instanceof \yii\console\Application)) {
-            if ($cache = $app->getCache()) {
-                if (is_array($models = $this->supportModels)) {
-                    foreach ($models as $name => $class) {
-                        if (class_exists($class)) {
+        if (!($app instanceof \yii\console\Application)) {
+            if (is_array($models = $this->supportModels)) {
+                foreach ($models as $context => $support) {
+                    if (isset($support['class']) && isset($support['options'])) {
+
+                        $class = $support['class'];
+                        $options = $support['options'];
+                        $indexing = $support['indexing'];
+
+                        if (class_exists($class) && isset($support['indexing'])) {
+
                             $model = new $class();
-                            \yii\base\Event::on($class, $model::EVENT_AFTER_INSERT, function ($event) use ($cache) {
-                                $cache->delete(md5('rss-feed'));
-                            });
-                            \yii\base\Event::on($class, $model::EVENT_AFTER_UPDATE, function ($event) use ($cache) {
-                                $cache->delete(md5('rss-feed'));
-                            });
-                            \yii\base\Event::on($class, $model::EVENT_AFTER_DELETE, function ($event) use ($cache) {
-                                $cache->delete(md5('rss-feed'));
-                            });
+                            $search = new Search();
+
+                            if ($indexing['on_insert']) {
+                                \yii\base\Event::on($class, $model::EVENT_AFTER_INSERT, function ($event) use ($search, $context, $options) {
+                                    $search->indexing($event->sender, $context, $options, 1);
+                                });
+                            }
+
+                            if ($indexing['on_update']) {
+                                \yii\base\Event::on($class, $model::EVENT_AFTER_UPDATE, function ($event) use ($search, $context, $options) {
+                                    $search->indexing($event->sender, $context, $options, 2);
+                                });
+                            }
+
+                            if ($indexing['on_delete']) {
+                                \yii\base\Event::on($class, $model::EVENT_AFTER_DELETE, function ($event) use ($search, $context, $options) {
+                                    $search->indexing($event->sender, $context, $options, 3);
+                                });
+                            }
+
                         }
+
                     }
                 }
             }
-        }*/
+        }
     }
 
 }

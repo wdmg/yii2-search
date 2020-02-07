@@ -21,7 +21,7 @@ class m200202_222848_search_index extends Migration
             'id' => $this->bigPrimaryKey(),
             'item_id' => $this->integer()->notNull(),
             'keyword_id' => $this->bigInteger()->notNull(),
-            'weight' => $this->integer(2)
+            'weight' => $this->double(2)
         ], $tableOptions);
 
         $this->addForeignKey(

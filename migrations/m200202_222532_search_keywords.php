@@ -20,7 +20,7 @@ class m200202_222532_search_keywords extends Migration
         $this->createTable('{{%search_keywords}}', [
 
             'id' => $this->bigPrimaryKey(),
-            'keyword' => $this->string(255)->null(),
+            'keyword' => $this->string(64)->notNull(),
 
         ], $tableOptions);
 
