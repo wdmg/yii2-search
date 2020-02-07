@@ -61,10 +61,10 @@ class LiveSearch extends \yii\base\Model
             }
         }
 
-        // Соберём запрос поиска в строку
+        // Collect the search query into a string
         $request = implode(" ", $keywords);
 
-        // Добавим и сам запрос в качестве ключевого слова
+        // Add the query itself as a keyword
         $keywords[] = $request;
 
         // Default snippets options
@@ -112,12 +112,12 @@ class LiveSearch extends \yii\base\Model
                                 $attributes = $model->getAttributes();
                                 if (is_array($options['fields'])) {
 
-                                    // Сверим параметры выборки с реальной коллекцией аттрибутов модели
+                                    // Check the selection parameters with a real collection of model attributes
                                     $fields = array_uintersect($options['fields'], array_keys($attributes), 'strcasecmp');
 
                                     $result = null;
 
-                                    // Берем результаты из кеша, если они там есть
+                                    // Take the results from the cache, if any
                                     if ($this->module->cacheExpire !== 0 && ($cache = Yii::$app->getCache())) {
                                         if ($cache->exists('live-search')) {
                                             $cached = $cache->get('live-search');
@@ -127,7 +127,7 @@ class LiveSearch extends \yii\base\Model
                                         }
                                     }
 
-                                    // Если данных в кеше не оказалось, выполним запрос поиска
+                                    // If there was no data in the cache, execute a search query
                                     if (is_null($result)) {
 
                                         $query = $model::find()
@@ -139,7 +139,7 @@ class LiveSearch extends \yii\base\Model
 
                                         $matches = $query->orderBy(['REL' => SORT_DESC])->limit(100)->all();
 
-                                        // Экранируем значения для использования в regex-паттернах
+                                        // Escape the values to use in regex patterns
                                         array_walk($keywords, function (&$item, $key) {
                                             $item = addcslashes($item, "\\+-.?*!^:");
                                         });
@@ -166,7 +166,7 @@ class LiveSearch extends \yii\base\Model
 
                                                     $content = '';
 
-                                                    // Склеиваем весь доступный контент модели
+                                                    // Glue all available model content
                                                     foreach ($fields as $field) {
                                                         if (!empty($content))
                                                             $content .= " " . $matches->$field;
@@ -174,10 +174,10 @@ class LiveSearch extends \yii\base\Model
                                                             $content .= $matches->$field;
                                                     }
 
-                                                    // Очищаем контент от html-тегов
+                                                    // We clear the content from html tags
                                                     $content = strip_tags(html_entity_decode($content));
 
-                                                    // Формируем сниппет релевантный ключу
+                                                    // Generate a key relevant snippet
                                                     $snippets = $module->generateSnippets($content, $keywords, $snippetsOptions, false);
 
                                                     $delimiter = $snippetsOptions['delimiter'];
@@ -199,7 +199,7 @@ class LiveSearch extends \yii\base\Model
                                             ]
                                         ]);
 
-                                        // Запишем в кеш результаты поиска
+                                        // Write the search results to the cache
                                         if ($result && $cache = Yii::$app->getCache()) {
                                             $cache->add('live-search', [
                                                 $request => $result
@@ -208,7 +208,7 @@ class LiveSearch extends \yii\base\Model
 
                                     }
 
-                                    // Добавим результаты поиска в коллекцию
+                                    // Add the search results to the collection
                                     if (!empty($result)) {
                                         $results[$context] = $result;
                                     }
@@ -223,7 +223,7 @@ class LiveSearch extends \yii\base\Model
             }
         }
 
-        // Подготавим общий результат поиска по всем моделям и возвратим его
+        // Prepare a general search result for all models and return it
         $output = [];
         if (is_array($results)) {
             foreach ($results as $result) {

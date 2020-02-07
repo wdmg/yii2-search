@@ -104,7 +104,7 @@ class Module extends BaseModule
     ];
 
     public $analyzerOptions = [ // @See \wdmg\helpers\TextAnalyzer
-        'min_length' => 2,
+        'min_length' => 3,
         'stop_words' => [],
         'weights' => []
     ];
