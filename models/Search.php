@@ -7,6 +7,7 @@ use yii\db\Expression;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
 use wdmg\helpers\TextAnalyzer;
+use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "{{%search}}".
@@ -27,6 +28,9 @@ class Search extends ActiveRecord
 
     public $query;
     public $module;
+    public $snippet;
+
+    private $_keywords;
 
     /**
      * {@inheritdoc}
@@ -76,6 +80,9 @@ class Search extends ActiveRecord
             [['url'], 'url'],
             [['context'], 'string', 'max' => 24],
             [['snippets'], 'string'],
+
+            ['query', 'string', 'max' => 128],
+
             [['created_at', 'updated_at', 'hash'], 'safe'],
         ];
 
@@ -99,6 +106,116 @@ class Search extends ActiveRecord
             'updated_at' => Yii::t('app/modules/search', 'Updated at')
         ];
     }
+
+    public function search($request = null) {
+
+        if (is_null($request))
+            return false;
+
+        $results = null;
+        $request = preg_replace('/[^\w\s\-\+\"]/u', ' ', $request);
+        $expanded = preg_split('/\s+/', $request);
+
+        if (is_null($searchAccuracy = intval($this->module->searchAccuracy)))
+            $searchAccuracy = 90;
+
+        // Default snippets options
+        $snippetOptions = [
+            'length' => 255,
+            'delimiter' => '…'
+        ];
+
+        // Load snippets options from module config
+        if (!is_null($this->module->snippetOptions)) {
+
+            if (isset($this->module->snippetOptions['max_length']))
+                $snippetOptions['length'] = $this->module->snippetOptions['max_length'];
+
+            if (isset($this->module->snippetOptions['delimiter']))
+                $snippetOptions['delimiter'] = $this->module->snippetOptions['delimiter'];
+
+        }
+
+        //
+        $morphy = new \phpMorphy(null, 'ru_RU', [
+            'storage' => \phpMorphy::STORAGE_FILE,
+            'with_gramtab' => false,
+            'predict_by_suffix' => true,
+            'predict_by_db' => true
+        ]);
+
+        foreach ($expanded as $key => $keyword) {
+            if (mb_strlen($keyword) >= 3) {
+                if ($base = $morphy->lemmatize(mb_strtoupper(str_ireplace("ё", "е", $keyword), "UTF-8"))) {
+                    $this->_keywords[] = mb_strtolower($base[0], "UTF-8");
+                } else {
+                    $this->_keywords[] = $keyword;
+                }
+            }
+        }
+
+        if (!empty($this->_keywords)) {
+
+            $searchKeywords = new SearchKeywords();
+            $query = $searchKeywords->find()
+                ->select('id')
+                ->where(['keyword' => $this->_keywords])
+                ->orderBy('id');
+
+            //var_dump($query->createCommand()->getRawSql());
+            $keyword_ids = ArrayHelper::getColumn($query->all(), 'id');
+
+            if (!empty($keyword_ids)) {
+
+                $searchIndex = new SearchIndex();
+                $query = $searchIndex->find()->select('item_id')
+                    ->where(['keyword_id' => $keyword_ids])
+                    ->andWhere('weight >= :accuracy', [':accuracy' => $searchAccuracy])
+                    ->groupBy('item_id')
+                    ->orderBy('`weight` DESC');
+
+                //var_dump($query->createCommand()->getRawSql());
+                $items_ids = ArrayHelper::getColumn($query->all(), 'item_id');
+
+                if (!empty($items_ids)) {
+
+                    $search = new self();
+                    $items = $search->find()->where(['id' => $items_ids])->all();
+
+                    foreach ($items as $item) {
+
+                        $snippets = [];
+                        if ($all_snippets = unserialize($item->snippets)) {
+                            foreach ($keyword_ids as $id) {
+                                if (isset($all_snippets[$id])) {
+                                    foreach ($all_snippets[$id] as $snippet) {
+                                        if (!empty($snippet)) {
+                                            $snippets[] = $snippet;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        $item->snippet = "";
+                        $delimiter = $snippetOptions['delimiter'];
+                        if (!empty($snippets))
+                            $item->snippet = implode(" " . $delimiter . " ", $snippets) . $delimiter;
+                        /*elseif (!empty($content))
+                            $item->snippet = mb_substr($content, 0, intval($snippetOptions['length'])) . $delimiter;*/
+
+                        unset($item->snippets);
+
+                    }
+
+                    $results = $items;
+                }
+            }
+        }
+
+        return $results;
+    }
+
 
     /**
      * @param null $model
@@ -135,7 +252,7 @@ class Search extends ActiveRecord
         }
 
         // Default snippets options
-        $snippetsOptions = [
+        $snippetOptions = [
             'before' => 6,
             'after' => 4,
             'tag' => false,
@@ -147,19 +264,19 @@ class Search extends ActiveRecord
         if (!is_null($this->module->snippetOptions)) {
 
             if (isset($this->module->snippetOptions['max_words_before']))
-                $snippetsOptions['before'] = $this->module->snippetOptions['max_words_before'];
+                $snippetOptions['before'] = $this->module->snippetOptions['max_words_before'];
 
             if (isset($this->module->snippetOptions['max_words_after']))
-                $snippetsOptions['after'] = $this->module->snippetOptions['max_words_after'];
+                $snippetOptions['after'] = $this->module->snippetOptions['max_words_after'];
 
             if (isset($this->module->snippetOptions['bolder_tag']))
-                $snippetsOptions['tag'] = $this->module->snippetOptions['bolder_tag'];
+                $snippetOptions['tag'] = $this->module->snippetOptions['bolder_tag'];
 
             if (isset($this->module->snippetOptions['max_length']))
-                $snippetsOptions['length'] = $this->module->snippetOptions['max_length'];
+                $snippetOptions['length'] = $this->module->snippetOptions['max_length'];
 
             if (isset($this->module->snippetOptions['delimiter']))
-                $snippetsOptions['delimiter'] = $this->module->snippetOptions['delimiter'];
+                $snippetOptions['delimiter'] = $this->module->snippetOptions['delimiter'];
 
         }
 
@@ -171,6 +288,18 @@ class Search extends ActiveRecord
 
                 $fields = $options['fields'];
                 if ($model instanceof \yii\db\ActiveRecord && is_array($fields)) {
+
+                    // Checking, perhaps the properties of the model does not meet the conditions allowing indexing
+                    if (isset($options['conditions'])) {
+                        foreach ($options['conditions'] as $prop => $value) {
+                            if (!is_null($model->$prop)) {
+
+                                if (!($model->$prop == $value))
+                                    return 0;
+
+                            }
+                        }
+                    }
 
                     // Required title attribute for search results
                     $title = null;
@@ -232,7 +361,7 @@ class Search extends ActiveRecord
 
                     // Generate search snippets
                     \Yii::beginProfile('search-indexing-generate-snippets');
-                    $all_snippets = $this->module->generateSnippets($content, array_keys($keywords), $snippetsOptions);
+                    $all_snippets = $this->module->generateSnippets($content, array_keys($keywords), $snippetOptions);
                     \Yii::endProfile('search-indexing-generate-snippets');
 
                     // Getting to the morphological analysis

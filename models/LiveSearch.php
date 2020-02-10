@@ -47,6 +47,7 @@ class LiveSearch extends \yii\base\Model
 
     public function search($request = null)
     {
+
         if (is_null($request))
             return false;
 
@@ -56,7 +57,7 @@ class LiveSearch extends \yii\base\Model
 
         // Составим список ключевых слов с длинной более 3-х символов
         foreach ($expanded as $key => $keyword) {
-            if (strlen($keyword) >= 3) {
+            if (mb_strlen($keyword) >= 3) {
                 $keywords[] = $keyword;
             }
         }
@@ -100,6 +101,7 @@ class LiveSearch extends \yii\base\Model
         if (!empty($request) && is_array($this->module->supportModels)) {
 
             foreach ($this->module->supportModels as $context => $support) {
+
                 if (isset($support['class']) && isset($support['options'])) {
 
                     $class = $support['class'];
@@ -134,10 +136,14 @@ class LiveSearch extends \yii\base\Model
                                             ->select('*, MATCH (' . implode(', ', $fields) . ') AGAINST (\'' . $request . '\' IN BOOLEAN MODE) as REL')
                                             ->where('MATCH (' . implode(', ', $fields) . ') AGAINST (\'' . $request . '\' IN BOOLEAN MODE)');
 
-                                        if (null !== $model::STATUS_PUBLISHED)
-                                            $query->andWhere(['status' => $model::STATUS_PUBLISHED]);
+                                        // Checking, the model may not meet the conditions that allow displaying in search results
+                                        if (isset($options['conditions'])) {
+                                            $query->andWhere($options['conditions']);
+                                        }
 
-                                        $matches = $query->orderBy(['REL' => SORT_DESC])->limit(100)->all();
+                                        $query->orderBy(['REL' => SORT_DESC])->limit(100);
+                                        //var_dump($query->createCommand()->getRawSql());
+                                        $matches = $query->all();
 
                                         // Escape the values to use in regex patterns
                                         array_walk($keywords, function (&$item, $key) {
@@ -181,12 +187,11 @@ class LiveSearch extends \yii\base\Model
                                                     $snippets = $module->generateSnippets($content, $keywords, $snippetsOptions, false);
 
                                                     $delimiter = $snippetsOptions['delimiter'];
-                                                    if (!empty($snippets))
+                                                    if (!empty($snippets)) {
                                                         return implode(" " . $delimiter . " ", $snippets) . $delimiter;
-                                                    elseif (!empty($content))
-                                                        return mb_substr($content, 0, intval($snippetsOptions['length'])) . $delimiter;
-
-                                                    return "";
+                                                    } else {
+                                                        return false;
+                                                    }
                                                 },
                                                 'url' => function ($matches) use ($options) {
 
@@ -199,9 +204,17 @@ class LiveSearch extends \yii\base\Model
                                             ]
                                         ]);
 
+                                        // Clearing results of empty items by URL or snippet
+                                        foreach ($result as $key => $item) {
+
+                                            if (!($result[$key]['url']) || !($result[$key]['snippet']))
+                                                unset($result[$key]);
+
+                                        }
+
                                         // Write the search results to the cache
                                         if ($result && $cache = Yii::$app->getCache()) {
-                                            $cache->add('live-search', [
+                                            $cache->set('live-search', [
                                                 $request => $result
                                             ], intval($this->module->cacheExpire));
                                         }
@@ -217,22 +230,19 @@ class LiveSearch extends \yii\base\Model
                             }
                         }
                     }
-
-
                 }
             }
         }
 
-        // Prepare a general search result for all models and return it
         $output = [];
         if (is_array($results)) {
             foreach ($results as $result) {
-                $output = ArrayHelper::merge($output, $result);
+                $result = array_values ($result);
+                $output = ArrayHelper::crossMerging($output, $result);
             }
         }
 
         return $output;
 
     }
-
 }
