@@ -285,7 +285,6 @@ class Search extends ActiveRecord
         if (!is_null($model) && !is_null($context) && !is_null($options) && $action !== 3) {
 
             if (isset($options['fields'])) {
-
                 $fields = $options['fields'];
                 if ($model instanceof \yii\db\ActiveRecord && is_array($fields)) {
 
@@ -304,17 +303,26 @@ class Search extends ActiveRecord
                     // Required title attribute for search results
                     $title = null;
                     if (isset($options['title'])) {
-                        $title = $model[$options['title']];
+
+                        if (!($title = $model->getAttribute($options['title'])))
+                            $title = $model[$options['title']];
+
                     }
 
                     // Required URL attribute for search results
                     $url = null;
                     if (isset($options['url'])) {
-                        $url = $model[$options['url']];
+
+                        if (!($url = $model->getAttribute($options['url'])))
+                            $url = $model[$options['url']];
+
                     }
 
                     // Get only the attributes that exist in the model
-                    $attributes = array_uintersect($fields, array_keys($model->getAttributes()), 'strcasecmp');
+                    $attributes = null;
+                    if (is_array($options['fields'])) {
+                        $attributes = array_uintersect($options['fields'], array_keys($model->getAttributes()), 'strcasecmp');
+                    }
 
                     // Here we will store all indexing content
                     $content = '';
@@ -426,6 +434,8 @@ class Search extends ActiveRecord
 
                             // First, save the page data model, because we need her id
                             if ($search->save()) {
+
+                                $isOk = true;
                                 $item_id = $search->id;
 
                                 // Now add each of the search words
@@ -465,11 +475,10 @@ class Search extends ActiveRecord
 
                                             // If everything is correct, save the model
                                             if ($searchIndex->validate()) {
-                                                $searchIndex->save();
-                                                /*if ($searchIndex->save())
-                                                    return 1;
-                                                else
-                                                    return -1;*/
+
+                                                if (!($searchIndex->save()))
+                                                    $isOk = false;
+
                                             }
 
                                             if (isset($item['snippet']))
@@ -481,7 +490,10 @@ class Search extends ActiveRecord
 
                                 // Save the resulting snippets
                                 $search->snippets = serialize($snippets);
-                                $search->update();
+                                if ($search->update() && $isOk)
+                                    return 1;
+                                else
+                                    return -1;
 
                             }
                         }

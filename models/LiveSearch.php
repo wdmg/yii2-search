@@ -121,10 +121,10 @@ class LiveSearch extends \yii\base\Model
 
                                     // Take the results from the cache, if any
                                     if ($this->module->cacheExpire !== 0 && ($cache = Yii::$app->getCache())) {
-                                        if ($cache->exists('live-search')) {
-                                            $cached = $cache->get('live-search');
-                                            if (isset($cached[$request]))
-                                                $result = $cached[$request];
+                                        if ($cache->exists(md5('live-search'))) {
+                                            $cached = $cache->get(md5('live-search'));
+                                            if (isset($cached[$request][$context]))
+                                                $result = $cached[$request][$context];
 
                                         }
                                     }
@@ -214,8 +214,10 @@ class LiveSearch extends \yii\base\Model
 
                                         // Write the search results to the cache
                                         if ($result && $cache = Yii::$app->getCache()) {
-                                            $cache->set('live-search', [
-                                                $request => $result
+                                            $cache->set(md5('live-search'), [
+                                                $request => [
+                                                    $context => $result
+                                                ]
                                             ], intval($this->module->cacheExpire));
                                         }
 
