@@ -247,4 +247,19 @@ class LiveSearch extends \yii\base\Model
         return $output;
 
     }
+
+    /**
+     * @return int
+     */
+    public static function flushCache() {
+        if ($cache = Yii::$app->getCache()) {
+            if ($cache->delete(md5('live-search'))) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else {
+            return -1;
+        }
+    }
 }

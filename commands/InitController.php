@@ -2,6 +2,7 @@
 
 namespace wdmg\search\commands;
 
+use wdmg\search\models\LiveSearch;
 use wdmg\search\models\Search;
 use wdmg\search\models\SearchIndex;
 use wdmg\search\models\SearchKeywords;
@@ -58,21 +59,43 @@ class InitController extends Controller
         } else if ($selected == "2") {
             Yii::$app->runAction('migrate/down', ['migrationPath' => '@vendor/wdmg/yii2-search/migrations', 'interactive' => true]);
         } else if ($selected == "3") {
-            if ($cache = Yii::$app->getCache()) {
-                if ($cache->delete(md5('live-search'))) {
-                    echo $this->ansiFormat("OK! Live search cache successfully cleaned.\n\n", Console::FG_GREEN);
-                } else {
-                    echo $this->ansiFormat("An error occurred while cleaning a live search cache.\n\n", Console::FG_RED);
+            if (is_int($resp = LiveSearch::flushCache())) {
+                if ($resp === 1) {
+                    echo $this->ansiFormat("\nOK! Live search cache successfully cleaned.\n", Console::FG_GREEN);
+                } elseif ($resp === 0) {
+                    echo $this->ansiFormat("\nAn error occurred while cleaning a live search cache.\n", Console::FG_RED);
                 }
             } else {
-                echo $this->ansiFormat("Error! Cache component not configured in application.\n\n", Console::FG_RED);
+                echo $this->ansiFormat("\nError! Cache component not configured in the application.\n", Console::FG_RED);
             }
         } else if ($selected == "4") {
 
+            // Checking UrlManager component
+            if ($urlManager = Yii::$app->getUrlManager()) {
+                if (!($urlManager->hostInfo))
+                    echo $this->ansiFormat("\nError! `hostInfo` must be configured in the UrlManager component.\n", Console::FG_RED);
+
+                if (!($urlManager->baseUrl))
+                    echo $this->ansiFormat("\nError! `baseUrl` must be configured in the UrlManager component.\n", Console::FG_RED);
+
+            } else {
+                echo $this->ansiFormat("\nError! UrlManager component not configured in the application.\n", Console::FG_RED);
+            }
+
             $count = 0;
             $isOk = true;
-            echo $this->ansiFormat("\n\nStart reindex...\n");
+            echo $this->ansiFormat("\nStart rebuild index...\n");
 
+            if (is_null($max_execution_time = $this->module->indexingOptions['max_execution_time']))
+                $max_execution_time = 30;
+
+            ini_set('max_execution_time', intval($max_execution_time));
+
+            if (!is_null($memory_limit = $this->module->indexingOptions['memory_limit'])) {
+                ini_set('memory_limit', (intval($memory_limit) - 1) . "M");
+            }
+
+            // Indexing process
             if (is_array($models = $module->supportModels)) {
                 foreach ($models as $context => $support) {
                     if (isset($support['class']) && isset($support['options'])) {
@@ -112,9 +135,7 @@ class InitController extends Controller
                                                 $isOk = false;
                                             }
                                         }
-
                                     }
-
                                 }
                             }
                         }
@@ -123,34 +144,25 @@ class InitController extends Controller
             }
 
             if ($isOk) {
-                echo $this->ansiFormat("OK! Search index successfully rebuilding. Added $count documents.\n\n", Console::FG_GREEN);
+                echo $this->ansiFormat("\nOK! Search index successfully rebuild. Added $count items.\n", Console::FG_GREEN);
             } else {
-                echo $this->ansiFormat("An error occurred while rebuild a search index.\n\n", Console::FG_RED);
+                echo $this->ansiFormat("\nAn error occurred while rebuild a search index.\n", Console::FG_RED);
             }
 
         } else if ($selected == "5") {
 
             $isOk = true;
-            $searchIndex = new SearchIndex();
-            if (!($searchIndex->deleteAll()))
-                $isOk = false;
-
-            $searchKeywords = new SearchKeywords();
-            if (!($searchKeywords->deleteAll()))
-                $isOk = false;
-
-            $search = new Search();
-            if (!($search->deleteAll()))
+            if (!(Search::deleteAll()))
                 $isOk = false;
 
             if ($isOk) {
-                echo $this->ansiFormat("OK! Search index successfully dropped.\n\n", Console::FG_GREEN);
+                echo $this->ansiFormat("\nOK! Search index successfully dropped.\n", Console::FG_GREEN);
             } else {
-                echo $this->ansiFormat("An error occurred while dropping a search index.\n\n", Console::FG_RED);
+                echo $this->ansiFormat("\nAn error occurred while dropping a search index.\n", Console::FG_RED);
             }
 
         } else {
-            echo $this->ansiFormat("Error! Your selection has not been recognized.\n\n", Console::FG_RED);
+            echo $this->ansiFormat("\nError! Your selection has not been recognized.\n", Console::FG_RED);
             return ExitCode::UNSPECIFIED_ERROR;
         }
 

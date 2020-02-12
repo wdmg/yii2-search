@@ -6,8 +6,9 @@ use Yii;
 use yii\db\Expression;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
+use wdmg\validators\SerialValidator;
 use wdmg\helpers\TextAnalyzer;
-use yii\helpers\ArrayHelper;
+use wdmg\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "{{%search}}".
@@ -107,6 +108,14 @@ class Search extends ActiveRecord
         ];
     }
 
+    public function afterFind()
+    {
+        parent::afterFind();
+        if (SerialValidator::isValid($this->snippets)) {
+            $this->snippets = unserialize($this->snippets);
+        }
+    }
+
     public function search($request = null) {
 
         if (is_null($request))
@@ -185,7 +194,7 @@ class Search extends ActiveRecord
                     foreach ($items as $item) {
 
                         $snippets = [];
-                        if ($all_snippets = unserialize($item->snippets)) {
+                        if ($all_snippets = $item->snippets) {
                             foreach ($keyword_ids as $id) {
                                 if (isset($all_snippets[$id])) {
                                     foreach ($all_snippets[$id] as $snippet) {
@@ -232,11 +241,6 @@ class Search extends ActiveRecord
 
         if (is_null($analyze_by = $this->module->indexingOptions['analyze_by']))
             $analyze_by = 'relevance';
-
-        if (is_null($max_execution_time = $this->module->indexingOptions['max_execution_time']))
-            $max_execution_time = 30;
-
-        ini_set('max_execution_time', intval($max_execution_time));
 
         if (!is_null($this->module->analyzerOptions)) {
 
@@ -513,4 +517,57 @@ class Search extends ActiveRecord
     }
 
 
+    /**
+     * @return array
+     */
+    public function getContextsList($allContexts = false)
+    {
+        $list = [];
+        if ($allContexts)
+            $list = [
+                '*' => Yii::t('app/modules/search', 'All contexts'),
+            ];
+
+        $result = Search::find()->select('context')->asArray()->groupBy('context')->all();
+        return ArrayHelper::merge($list, ArrayHelper::map($result, 'context', 'context'));
+    }
+
+    public function getSnippetsCount() {
+
+        if (is_countable($this->snippets))
+            return count($this->snippets);
+        else
+            return 0;
+    }
+
+    public function getKeywordsCount() {
+        return SearchIndex::find()->where(['item_id' => $this->id])->groupBy('keyword_id')->count();
+    }
+
+    /**
+     * @param null $condition
+     * @param array $params
+     * @return bool|int
+     */
+    public static function deleteAll($condition = null, $params = [])
+    {
+        $count = 0;
+        $isOk = true;
+
+        if (!(SearchIndex::deleteAll()))
+            $isOk = false;
+
+        if (!(SearchKeywords::deleteAll()))
+            $isOk = false;
+
+        if (!($count = parent::deleteAll($condition, $params)))
+            $isOk = false;
+
+        if ($isOk) {
+            return $count;
+        } else {
+            return false;
+        }
+
+    }
 }

@@ -62,6 +62,7 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [in progress development]
+* v.1.0.4 - Added drop search index and rebuild from dashboard
 * v.1.0.3 - Added drop search index and rebuild from console
 * v.1.0.2 - Added README.md, complete Search and LiveSearch interface
 * v.1.0.1 - Added Search model, indexing functionality

@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 1.0.4 (2020-02-12)
+ * Added drop search index and rebuild from dashboard
+ 
 ## 1.0.3 (2020-02-11)
  * Added drop search index and rebuild from console
  

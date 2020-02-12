@@ -6,7 +6,7 @@ namespace wdmg\search;
  * Yii2 Search
  *
  * @category        Module
- * @version         1.0.3
+ * @version         1.0.4
  * @author          Alexsander Vyshnyvetskyy <alex.vyshnyvetskyy@gmail.com>
  * @link            https://github.com/wdmg/yii2-search
  * @copyright       Copyright (c) 2020 W.D.M.Group, Ukraine
@@ -106,6 +106,7 @@ class Module extends BaseModule
         'processing' => 'phpMorphy', //  Set `phpMorphy` or `LinguaStem` (not realized et)
         'analyze_by' => 'relevance',
         'max_execution_time' => 0, // max execution time in sec. for indexing process
+        'memory_limit' => null, // max operating memory in Mb for indexing process
         'max_words' => 50,
     ];
 
@@ -128,7 +129,7 @@ class Module extends BaseModule
     /**
      * @var string the module version
      */
-    private $version = "1.0.3";
+    private $version = "1.0.4";
 
     /**
      * @var integer, priority of initialization
@@ -160,6 +161,26 @@ class Module extends BaseModule
             'icon' => 'fa-search',
             'url' => [$this->routePrefix . '/'. $this->id],
             'active' => (in_array(\Yii::$app->controller->module->id, [$this->id]) &&  Yii::$app->controller->id == 'list'),
+        ];
+
+
+        $items = [
+            'label' => $this->name,
+            'url' => '#',
+            'icon' => 'fa-search',
+            'active' => in_array(\Yii::$app->controller->module->id, [$this->id]),
+            'items' => [
+                [
+                    'label' => Yii::t('app/modules/search', 'Search index'),
+                    'url' => [$this->routePrefix . '/search/list/'],
+                    'active' => (in_array(\Yii::$app->controller->module->id, ['search']) &&  Yii::$app->controller->id == 'list'),
+                ],
+                [
+                    'label' => Yii::t('app/modules/search', 'Ignored list'),
+                    'url' => [$this->routePrefix . '/search/ignored/'],
+                    'active' => (in_array(\Yii::$app->controller->module->id, ['search']) &&  Yii::$app->controller->id == 'ignored'),
+                ],
+            ]
         ];
         return $items;
     }
