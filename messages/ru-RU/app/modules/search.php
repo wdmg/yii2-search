@@ -31,6 +31,21 @@ return [
     'Updated by' => "Автор изменений",
 
     "All contexts" => "Все контексты",
+    "All statuses" => "Все статусы",
+    "Active" => "Активно",
+    "Disabled" => "Не активно",
+
+    "Add pattern" => "Добавить паттерн",
+    "Add new pattern" => "Добавить новый паттерн",
+    "Update the pattern" => "Редактирование паттерна",
+
+    'Pattern has been successfully added!' => "Паттерн был успешно добавлен!",
+    'An error occurred while add the pattern.' => "Произошла ошибка при добавлении паттерна.",
+    'Pattern has been successfully updated!' => "Паттерн был успешно обновлён!",
+    'An error occurred while updating the pattern.' => "Произошла ошибка при обновлении паттерна.",
+    'Pattern has been successfully deleted!' => "Паттерн был успешно удалён!",
+    'An error occurred while deleting the pattern.' => "Произошла ошибка при удалении паттерна.",
+    'The requested pattern does not exist.' => "Запрошенный паттерн не найден!",
 
     "Drop index" => "Сбросить индекс",
     "Clear cache" => "Очистить кеш",

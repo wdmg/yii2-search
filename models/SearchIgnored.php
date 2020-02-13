@@ -22,6 +22,10 @@ use yii\behaviors\BlameableBehavior;
  */
 class SearchIgnored extends ActiveRecord
 {
+
+    const PATTERN_STATUS_ACTIVE = 1;
+    const PATTERN_STATUS_DISABLED = 0;
+
     /**
      * {@inheritdoc}
      */
@@ -35,7 +39,7 @@ class SearchIgnored extends ActiveRecord
      */
     public function behaviors()
     {
-        return [
+        $behaviors = [
             'timestamp' => [
                 'class' => TimestampBehavior::class,
                 'attributes' => [
@@ -44,12 +48,18 @@ class SearchIgnored extends ActiveRecord
                 ],
                 'value' => new Expression('NOW()'),
             ],
-            'blameable' =>  [
+
+        ];
+
+        if (class_exists('\wdmg\users\models\Users')) {
+            $behaviors[] = [
                 'class' => BlameableBehavior::class,
                 'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => 'updated_by',
-            ]
-        ];
+            ];
+        }
+
+        return $behaviors;
     }
 
     /**
@@ -65,7 +75,7 @@ class SearchIgnored extends ActiveRecord
         ];
 
         if (class_exists('\wdmg\users\models\Users')) {
-            $rules[] = [['created_by', 'updated_by'], 'required'];
+            $rules[] = [['created_by', 'updated_by'], 'safe'];
         }
 
         return $rules;
@@ -85,5 +95,23 @@ class SearchIgnored extends ActiveRecord
             'updated_at' => Yii::t('app/modules/search', 'Updated at'),
             'updated_by' => Yii::t('app/modules/search', 'Updated by')
         ];
+    }
+
+    /**
+     * @return array of list
+     */
+    public function getStatusesList($allStatuses = false)
+    {
+        if($allStatuses)
+            $list[] = [
+                '*' => Yii::t('app/modules/search', 'All statuses')
+            ];
+
+        $list[] = [
+            self::PATTERN_STATUS_DISABLED => Yii::t('app/modules/search', 'Disabled'),
+            self::PATTERN_STATUS_ACTIVE => Yii::t('app/modules/search', 'Active')
+        ];
+
+        return $list;
     }
 }

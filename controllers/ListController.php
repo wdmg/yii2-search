@@ -154,7 +154,7 @@ class ListController extends Controller
     public function actionRebuild()
     {
         $count = 0;
-        $report = [];
+        //$reports = [];
         $isOk = true;
 
         if (is_null($max_execution_time = $this->module->indexingOptions['max_execution_time']))
@@ -166,14 +166,11 @@ class ListController extends Controller
             ini_set('memory_limit', (intval($memory_limit) - 1) . "M");
         }
 
-        // Игнорируем отмену загрузки страницы пользователем
+        // Ignore user canceled page loading
         ignore_user_abort();
 
-        // Говорим что соединение надо закрыть
+        // We say that the connection must be closed
         Yii::$app->getResponse()->getHeaders()->add('Connection', 'close');
-        /*@ob_end_flush();
-        @ob_flush();
-        @flush();*/
 
         // Indexing process
         if (is_array($models = $this->module->supportModels)) {
@@ -202,18 +199,18 @@ class ListController extends Controller
                                     foreach ($items as $item) {
                                         $i++;
                                         $time = time();
-                                        $report[$i][] = "    - indexing `$item->title` ($context)";
+                                        //$reports[] = "    - indexing `$item->title` ($context)";
                                         $code = $search->indexing($item, $context, $options);
                                         if ($code == 1) {
                                             $time = time() - $time;
-                                            $report[$i][] = " - ok, code: $code, time: $time sec.\n";
+                                            //$reports[] = " - ok, code: $code, time: $time sec.\n";
                                             $count++;
                                         } elseif ($code == 2 || $code == 0) {
                                             $time = time() - $time;
-                                            $report[$i][] = " - skip, code: $code, time: $time sec.\n";
+                                            //$reports[] = " - skip, code: $code, time: $time sec.\n";
                                         } else {
                                             $time = time() - $time;
-                                            $report[$i][] = " - fail, code: $code, time: $time sec.\n";
+                                            //$reports[] = " - fail, code: $code, time: $time sec.\n";
                                             $isOk = false;
                                         }
                                     }
@@ -225,7 +222,7 @@ class ListController extends Controller
             }
         }
 
-        //return json_encode($report);
+        //return json_encode($reports);
 
         if ($isOk) {
             Yii::$app->getSession()->setFlash(
