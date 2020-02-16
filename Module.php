@@ -6,7 +6,7 @@ namespace wdmg\search;
  * Yii2 Search
  *
  * @category        Module
- * @version         1.0.4
+ * @version         1.0.5
  * @author          Alexsander Vyshnyvetskyy <alex.vyshnyvetskyy@gmail.com>
  * @link            https://github.com/wdmg/yii2-search
  * @copyright       Copyright (c) 2020 W.D.M.Group, Ukraine
@@ -48,7 +48,7 @@ class Module extends BaseModule
     public $description = "Site search";
 
     /**
-     * @var array list of supported models for live search and indexation
+     * @var array list of supported models for live search or/and indexation
      */
     public $supportModels = [
         'news' => [
@@ -100,22 +100,30 @@ class Module extends BaseModule
      */
     public $cacheExpire = 86400; // 86400 1 day.
 
-    public $morphology = 'phpMorphy';
-
+    /**
+     * @var array indexation options
+     */
     public $indexingOptions = [
         'processing' => 'phpMorphy', //  Set `phpMorphy` or `LinguaStem` (not realized et)
+        'language' => 'ru-RU', // Support 'ru-RU', 'uk-UA', 'de-DE'
         'analyze_by' => 'relevance',
         'max_execution_time' => 0, // max execution time in sec. for indexing process
         'memory_limit' => null, // max operating memory in Mb for indexing process
         'max_words' => 50,
     ];
 
-    public $analyzerOptions = [ // @See \wdmg\helpers\TextAnalyzer
+    /**
+     * @var array text analyzer options, see \wdmg\helpers\TextAnalyzer
+     */
+    public $analyzerOptions = [
         'min_length' => 3,
         'stop_words' => [],
         'weights' => []
     ];
 
+    /**
+     * @var array build search snippet options
+     */
     public $snippetOptions = [
         'max_words_before' => 6,
         'max_words_after' => 4,
@@ -124,12 +132,15 @@ class Module extends BaseModule
         'delimiter' => '…'
     ];
 
+    /**
+     * @var int search accuracy
+     */
     public $searchAccuracy = 90;
 
     /**
      * @var string the module version
      */
-    private $version = "1.0.4";
+    private $version = "1.0.5";
 
     /**
      * @var integer, priority of initialization
@@ -158,14 +169,6 @@ class Module extends BaseModule
     {
         $items = [
             'label' => $this->name,
-            'icon' => 'fa-search',
-            'url' => [$this->routePrefix . '/'. $this->id],
-            'active' => (in_array(\Yii::$app->controller->module->id, [$this->id]) &&  Yii::$app->controller->id == 'list'),
-        ];
-
-
-        $items = [
-            'label' => $this->name,
             'url' => '#',
             'icon' => 'fa-search',
             'active' => in_array(\Yii::$app->controller->module->id, [$this->id]),
@@ -182,6 +185,7 @@ class Module extends BaseModule
                 ],
             ]
         ];
+
         return $items;
     }
 

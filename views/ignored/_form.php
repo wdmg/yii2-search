@@ -12,7 +12,7 @@ use wdmg\widgets\SelectInput;
 <div class="ignored-pattern-form">
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'pattern')->textInput() ?>
+    <?= $form->field($model, 'pattern')->textInput(['placeholder' => "Enter keywords or regex pattern..."]) ?>
 
     <?= $form->field($model, 'status')->widget(SelectInput::class, [
         'items' => $model->getStatusesList(),

@@ -39,9 +39,55 @@ To add a module to the project, add the following data in your configuration fil
 
     'modules' => [
         ...
-        'search' => [
+        'search' => [ // list of supported models for live search or/and indexation
             'class' => 'wdmg\search\Module',
             'routePrefix' => 'admin',
+            'supportModels' => [
+               'news' => [
+                   'class' => 'wdmg\news\models\News',
+                   'indexing' => [
+                       'on_insert' => true,
+                       'on_update' => true,
+                       'on_delete' => true
+                   ],
+                   'options' => [
+                       'title' => 'title',
+                       'url' => 'url',
+                       'fields' => [
+                           'title',
+                           'keywords',
+                           'description',
+                           'content'
+                       ],
+                       'conditions' => [
+                           'status' => 1
+                       ]
+                   ]
+               ],
+               ...
+           ],
+           'cacheExpire' = 86400, // live search cache lifetime, `0` - for not use cache
+           'indexingOptions' = [ // indexation options
+               'processing' => 'phpMorphy', //  Set `phpMorphy` or `LinguaStem` (not support et)
+               'language' => 'ru-RU', // Support 'ru-RU', 'uk-UA', 'de-DE'
+               'analyze_by' => 'relevance',
+               'max_execution_time' => 0, // max execution time in sec. for indexing process
+               'memory_limit' => null, // max operating memory in Mb for indexing process
+               'max_words' => 50,
+           ],
+           'analyzerOptions' = [ // text analyzer options, see \wdmg\helpers\TextAnalyzer
+               'min_length' => 3,
+               'stop_words' => [],
+               'weights' => []
+           ],
+           'snippetOptions' = [ // build search snippet options
+               'max_words_before' => 6,
+               'max_words_after' => 4,
+               'bolder_tag' => 'strong',
+               'max_length' => 255,
+               'delimiter' => '…'
+           ],
+           'searchAccuracy' = 90, // search accuracy
         ],
         ...
     ],
@@ -62,8 +108,6 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [in progress development]
+* v.1.0.5 - Added ignored patterns
 * v.1.0.4 - Added drop search index and rebuild from dashboard
 * v.1.0.3 - Added drop search index and rebuild from console
-* v.1.0.2 - Added README.md, complete Search and LiveSearch interface
-* v.1.0.1 - Added Search model, indexing functionality
-* v.1.0.0 - Added search models

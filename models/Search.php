@@ -197,9 +197,11 @@ class Search extends ActiveRecord
                         if ($all_snippets = $item->snippets) {
                             foreach ($keyword_ids as $id) {
                                 if (isset($all_snippets[$id])) {
-                                    foreach ($all_snippets[$id] as $snippet) {
-                                        if (!empty($snippet)) {
-                                            $snippets[] = $snippet;
+                                    if (is_array($all_snippets[$id])) {
+                                        foreach ($all_snippets[$id] as $snippet) {
+                                            if (!empty($snippet)) {
+                                                $snippets[] = $snippet;
+                                            }
                                         }
                                     }
                                 }
@@ -231,13 +233,28 @@ class Search extends ActiveRecord
      * @param null $context
      * @param null $options
      * @param int $action
+     * @param string $language, 'uk_UA', 'ru_RU' etc.
      * @return int, state where: -1 - has error occurred, 0 - no indexing, 1 - success indexing, 2 - already in index (not updated)
      */
-    public function indexing($model = null, $context = null, $options = null, $action = 1) {
-
+    public function indexing($model = null, $context = null, $options = null, $action = 1, $language = null) {
+        
+        // Get language
+        if (is_null($language) && is_null($language = str_replace('-', '_', $this->module->indexingOptions['language']))) {
+            if (isset(Yii::$app->language) && is_null($language))
+                $language = str_replace('-', '_', Yii::$app->language);
+            elseif (!is_null($language))
+                $language = str_replace('-', '_', $language);
+            else
+                $language = 'ru_RU';
+        } else {
+            $language = str_replace('-', '_', $language);
+        }
 
         if (is_null($max_words = $this->module->indexingOptions['max_words']))
             $max_words = 50;
+
+        if (is_null($processing = $this->module->indexingOptions['processing']))
+            $processing = 'phpMorphy';
 
         if (is_null($analyze_by = $this->module->indexingOptions['analyze_by']))
             $analyze_by = 'relevance';
@@ -284,6 +301,9 @@ class Search extends ActiveRecord
 
         }
 
+        // Get ignored list
+        $ignored = SearchIgnored::find()->where(['status' => SearchIgnored::PATTERN_STATUS_ACTIVE])->asArray()->all();
+        $ignored = ArrayHelper::getColumn($ignored, 'pattern');
 
         \Yii::beginProfile('search-indexing');
         if (!is_null($model) && !is_null($context) && !is_null($options) && $action !== 3) {
@@ -383,7 +403,7 @@ class Search extends ActiveRecord
                         $collection = [];
 
                         \Yii::beginProfile('search-indexing-phpmorphy');
-                        $morphy = new \phpMorphy(null, 'ru_RU', [
+                        $morphy = new \phpMorphy(null, $language, [
                             'storage' => \phpMorphy::STORAGE_FILE,
                             'with_gramtab' => false,
                             'predict_by_suffix' => true,
@@ -392,20 +412,63 @@ class Search extends ActiveRecord
 
                         // Get the basic forms of words
                         foreach ($keywords as $keyword => $stat) {
-                            if ($base = $morphy->lemmatize(mb_strtoupper(str_ireplace("ё", "е", $keyword), "UTF-8"))) {
-                                $collection[] = [
-                                    'keyword' => $keyword,
-                                    'base' => mb_strtolower($base[0], "UTF-8"),
-                                    'weight' => $stat[$analyze_by],
-                                    'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
-                                ];
+
+                            // Skip keywords by ignored words
+                            $skip = false;
+                            if (is_array($ignored)) {
+                                if (in_array($keyword, $ignored)) {
+                                    $skip = true;
+                                    continue;
+                                }
+                            }
+
+                            if ((!$skip) && $base = $morphy->lemmatize(mb_strtoupper(str_ireplace("ё", "е", $keyword), "UTF-8"))) {
+
+                                // Get base word by
+                                $base_word = mb_strtolower($base[0], "UTF-8");
+
+                                // Skip keywords by ignored pattern
+                                $skip = false;
+                                foreach($ignored as $pattern) {
+                                    if (preg_match("/^\/.+\/[a-z]*$/i", $pattern)) {
+                                        if (preg_match($pattern, $base_word)) {
+                                            $skip = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!$skip) {
+                                    $collection[] = [
+                                        'keyword' => $keyword,
+                                        'base' => $base_word,
+                                        'weight' => $stat[$analyze_by],
+                                        'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
+                                    ];
+                                }
+
                             } else {
-                                $collection[] = [
-                                    'keyword' => $keyword,
-                                    'base' => $keyword,
-                                    'weight' => $stat[$analyze_by],
-                                    'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
-                                ];
+
+                                // Skip keywords by ignored pattern
+                                $skip = false;
+                                foreach($ignored as $pattern) {
+                                    if (preg_match("/^\/.+\/[a-z]*$/i", $pattern)) {
+                                        if (preg_match($pattern, $keyword)) {
+                                            $skip = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!$skip) {
+                                    $collection[] = [
+                                        'keyword' => $keyword,
+                                        'base' => $keyword,
+                                        'weight' => $stat[$analyze_by],
+                                        'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
+                                    ];
+                                }
+
                             }
                         }
                         \Yii::endProfile('search-indexing-phpmorphy');
@@ -564,6 +627,17 @@ class Search extends ActiveRecord
             $isOk = false;
 
         if ($isOk) {
+
+            $query = (new \yii\db\Query())->createCommand()->truncateTable(SearchIndex::tableName());
+            $query->execute();
+
+            $query = (new \yii\db\Query())->createCommand()->truncateTable(SearchKeywords::tableName());
+            $query->execute();
+
+            $query = (new \yii\db\Query())->createCommand()->truncateTable(self::tableName());
+            $query->execute();
+
+
             return $count;
         } else {
             return false;
