@@ -237,7 +237,7 @@ class Search extends ActiveRecord
      * @return int, state where: -1 - has error occurred, 0 - no indexing, 1 - success indexing, 2 - already in index (not updated)
      */
     public function indexing($model = null, $context = null, $options = null, $action = 1, $language = null) {
-        
+
         // Get language
         if (is_null($language) && is_null($language = str_replace('-', '_', $this->module->indexingOptions['language']))) {
             if (isset(Yii::$app->language) && is_null($language))
@@ -254,7 +254,7 @@ class Search extends ActiveRecord
             $max_words = 50;
 
         if (is_null($processing = $this->module->indexingOptions['processing']))
-            $processing = 'phpMorphy';
+            $processing = 'phpMorphy'; // TODO: add support for `LinguaStem`
 
         if (is_null($analyze_by = $this->module->indexingOptions['analyze_by']))
             $analyze_by = 'relevance';
@@ -327,19 +327,25 @@ class Search extends ActiveRecord
                     // Required title attribute for search results
                     $title = null;
                     if (isset($options['title'])) {
-
-                        if (!($title = $model->getAttribute($options['title'])))
-                            $title = $model[$options['title']];
-
+                        if (!is_string($options['title']) && is_callable($options['title'])) {
+                            $title = $options['title']($model);
+                        } else {
+                            if (!($title = $model->getAttribute($options['title'])))
+                                $title = $model[$options['title']];
+                        }
                     }
 
                     // Required URL attribute for search results
                     $url = null;
                     if (isset($options['url'])) {
+                        if (!is_string($options['url']) && is_callable($options['url'])) {
+                            $url = $options['url']($model);
+                        } else {
 
-                        if (!($url = $model->getAttribute($options['url'])))
-                            $url = $model[$options['url']];
+                            if (!($url = $model->getAttribute($options['url'])))
+                                $url = $model[$options['url']];
 
+                        }
                     }
 
                     // Get only the attributes that exist in the model
@@ -628,15 +634,14 @@ class Search extends ActiveRecord
 
         if ($isOk) {
 
-            $query = (new \yii\db\Query())->createCommand()->truncateTable(SearchIndex::tableName());
+            /*$query = (new \yii\db\Query())->createCommand()->truncateTable(SearchIndex::tableName());
             $query->execute();
 
             $query = (new \yii\db\Query())->createCommand()->truncateTable(SearchKeywords::tableName());
             $query->execute();
 
             $query = (new \yii\db\Query())->createCommand()->truncateTable(self::tableName());
-            $query->execute();
-
+            $query->execute();*/
 
             return $count;
         } else {

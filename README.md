@@ -51,8 +51,8 @@ To add a module to the project, add the following data in your configuration fil
                        'on_delete' => true
                    ],
                    'options' => [
-                       'title' => 'title',
-                       'url' => 'url',
+                       'title' => 'title', // attr name (string) of model or function($model)
+                       'url' => 'url', // attr name (string) of model or function($model)
                        'fields' => [
                            'title',
                            'keywords',
@@ -108,6 +108,6 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [in progress development]
-* v.1.0.5 - Added ignored patterns
+* v.1.0.5 - Added ignored patterns, URL for snippets as closure object
 * v.1.0.4 - Added drop search index and rebuild from dashboard
 * v.1.0.3 - Added drop search index and rebuild from console

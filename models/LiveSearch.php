@@ -159,10 +159,15 @@ class LiveSearch extends \yii\base\Model
                                                 },
                                                 'title' => function ($matches) use ($options, $fields, $keywords) {
 
-                                                    if (isset($options['title']))
-                                                        $title = $matches[$options['title']];
-                                                    else
+                                                    if (isset($options['title'])) {
+                                                        if (!is_string($options['title']) && is_callable($options['title'])) {
+                                                            $title = $options['title']($matches);
+                                                        } else {
+                                                            $title = $matches[$options['title']];
+                                                        }
+                                                    } else {
                                                         return false;
+                                                    }
 
                                                     $title = strip_tags($title);
                                                     $title = preg_replace('/(' . implode("|", $keywords) . ')/iu', '<strong>$0</strong>', $title);
@@ -194,12 +199,15 @@ class LiveSearch extends \yii\base\Model
                                                     }
                                                 },
                                                 'url' => function ($matches) use ($options) {
-
-                                                    if (isset($options['url']))
-                                                        return $matches[$options['url']];
-                                                    else
+                                                    if (isset($options['url'])) {
+                                                        if (!is_string($options['url']) && is_callable($options['url'])) {
+                                                            return $options['url']($matches);
+                                                        } else {
+                                                            return $matches[$options['url']];
+                                                        }
+                                                    } else {
                                                         return false;
-
+                                                    }
                                                 }
                                             ]
                                         ]);

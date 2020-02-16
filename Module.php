@@ -95,6 +95,7 @@ class Module extends BaseModule
         ],
     ];
 
+
     /**
      * @var int live search cache lifetime, `0` - for not use cache
      */
