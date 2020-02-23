@@ -45,7 +45,7 @@ class LiveSearch extends \yii\base\Model
         ];
     }
 
-    public function search($request = null)
+    public function search($request = null, $noCache = false)
     {
 
         if (is_null($request))
@@ -97,6 +97,9 @@ class LiveSearch extends \yii\base\Model
 
         }
 
+        if ($noCache)
+            $this->module->cacheExpire = 0;
+
         $results = null;
         if (!empty($request) && is_array($this->module->supportModels)) {
 
@@ -142,7 +145,7 @@ class LiveSearch extends \yii\base\Model
                                         }
 
                                         $query->orderBy(['REL' => SORT_DESC])->limit(100);
-                                        //var_dump($query->createCommand()->getRawSql());
+                                        // var_dump($query->createCommand()->getRawSql());die();
                                         $matches = $query->all();
 
                                         // Escape the values to use in regex patterns
@@ -153,7 +156,14 @@ class LiveSearch extends \yii\base\Model
                                         $module = $this->module;
                                         $result = \yii\helpers\ArrayHelper::toArray($matches, [
                                             $support['class'] => [
-                                                'id',
+                                                'id' => function ($matches) {
+
+                                                    if (isset($matches['id']))
+                                                        return $matches['id'];
+                                                    else
+                                                        return null;
+
+                                                },
                                                 'context' => function ($matches) use ($context) {
                                                     return $context;
                                                 },
@@ -208,17 +218,18 @@ class LiveSearch extends \yii\base\Model
                                                     } else {
                                                         return false;
                                                     }
+                                                },
+                                                'status' => function ($matches) {
+                                                    if (isset($matches['status'])) {
+                                                        return $matches['status'];
+                                                    } else {
+                                                        return false;
+                                                    }
                                                 }
                                             ]
                                         ]);
 
-                                        // Clearing results of empty items by URL or snippet
-                                        foreach ($result as $key => $item) {
-
-                                            if (!($result[$key]['url']) || !($result[$key]['snippet']))
-                                                unset($result[$key]);
-
-                                        }
+                                        // var_dump($result);die();
 
                                         // Write the search results to the cache
                                         if ($result && $cache = Yii::$app->getCache()) {

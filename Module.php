@@ -6,7 +6,7 @@ namespace wdmg\search;
  * Yii2 Search
  *
  * @category        Module
- * @version         1.0.5
+ * @version         1.0.6
  * @author          Alexsander Vyshnyvetskyy <alex.vyshnyvetskyy@gmail.com>
  * @link            https://github.com/wdmg/yii2-search
  * @copyright       Copyright (c) 2020 W.D.M.Group, Ukraine
@@ -141,7 +141,7 @@ class Module extends BaseModule
     /**
      * @var string the module version
      */
-    private $version = "1.0.5";
+    private $version = "1.0.6";
 
     /**
      * @var integer, priority of initialization
