@@ -171,7 +171,7 @@ class Module extends BaseModule
         $items = [
             'label' => $this->name,
             'url' => '#',
-            'icon' => 'fa-search',
+            'icon' => 'fa fa-fw fa-search',
             'active' => in_array(\Yii::$app->controller->module->id, [$this->id]),
             'items' => [
                 [
@@ -284,8 +284,6 @@ class Module extends BaseModule
 
                         if ($tag = $options['tag'])
                             $snippet = preg_replace('/(?:\b' . $keyword . '*?)\w+/iu', Html::tag($tag, '$0'), $part[0]);
-
-                        //$snippet = preg_replace('/(?:\b' . $keyword . '*?)\w+/iu', Html::tag($tag, '$0', (isset($options['tag_options'])) ? $options['tag_options'] : false), $part[0]);
 
                         if (!empty($snippet)) {
                             if (empty($snippets)) {

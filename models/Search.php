@@ -90,7 +90,6 @@ class Search extends ActiveRecord
         return $rules;
     }
 
-
     /**
      * {@inheritdoc}
      */
