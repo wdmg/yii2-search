@@ -103,7 +103,6 @@
         }
       },
       "cacheExpire": 86400,
-      "morphology": "phpMorphy",
       "indexingOptions": {
         "processing": "phpMorphy",
         "analyze_by": "relevance",
