@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 1.0.7 (2020-03-07)
+ * Added support for Blog module
+ 
 ## 1.0.6 (2020-02-23)
  * Added no caching parameter for search method
  

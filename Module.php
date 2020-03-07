@@ -6,7 +6,7 @@ namespace wdmg\search;
  * Yii2 Search
  *
  * @category        Module
- * @version         1.0.6
+ * @version         1.0.7
  * @author          Alexsander Vyshnyvetskyy <alex.vyshnyvetskyy@gmail.com>
  * @link            https://github.com/wdmg/yii2-search
  * @copyright       Copyright (c) 2020 W.D.M.Group, Ukraine
@@ -53,6 +53,27 @@ class Module extends BaseModule
     public $supportModels = [
         'news' => [
             'class' => 'wdmg\news\models\News',
+            'indexing' => [
+                'on_insert' => true,
+                'on_update' => true,
+                'on_delete' => true
+            ],
+            'options' => [
+                'title' => 'title',
+                'url' => 'url',
+                'fields' => [
+                    'title',
+                    'keywords',
+                    'description',
+                    'content'
+                ],
+                'conditions' => [
+                    'status' => 1
+                ]
+            ]
+        ],
+        'blog' => [
+            'class' => 'wdmg\blog\models\Posts',
             'indexing' => [
                 'on_insert' => true,
                 'on_update' => true,
@@ -141,7 +162,7 @@ class Module extends BaseModule
     /**
      * @var string the module version
      */
-    private $version = "1.0.6";
+    private $version = "1.0.7";
 
     /**
      * @var integer, priority of initialization

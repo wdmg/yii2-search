@@ -108,7 +108,6 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [in progress development]
+* v.1.0.7 - Added support for Blog module
 * v.1.0.6 - Added no caching parameter for search method
 * v.1.0.5 - Added ignored patterns, URL for snippets as closure object
-* v.1.0.4 - Added drop search index and rebuild from dashboard
-* v.1.0.3 - Added drop search index and rebuild from console
