@@ -21,7 +21,7 @@ class m200202_222306_search extends Migration
         $this->createTable('{{%search}}', [
             'id' => $this->primaryKey(),
             'title' => $this->string(255)->notNull(),
-            'url' => $this->string(2048)->notNull(),
+            'url' => $this->string(1024)->notNull(),
             'context' => $this->string(24)->null(),
             'hash' => $this->string(32)->notNull(),
             'snippets' => $this->binary(16777215),
