@@ -1,4 +1,4 @@
-[![Yii2](https://img.shields.io/badge/required-Yii2_v2.0.20-blue.svg)](https://packagist.org/packages/yiisoft/yii2)
+[![Yii2](https://img.shields.io/badge/required-Yii2_v2.0.33-blue.svg)](https://packagist.org/packages/yiisoft/yii2)
 [![Github all releases](https://img.shields.io/github/downloads/wdmg/yii2-search/total.svg)](https://GitHub.com/wdmg/yii2-search/releases/)
 ![Progress](https://img.shields.io/badge/progress-in_development-red.svg)
 [![GitHub license](https://img.shields.io/github/license/wdmg/yii2-search.svg)](https://github.com/wdmg/yii2-search/blob/master/LICENSE)
@@ -11,7 +11,7 @@ The module implements indexed search using morphology (phpMorphy) or Porter's st
 
 # Requirements 
 * PHP 5.6 or higher
-* Yii2 v.2.0.20 and newest
+* Yii2 v.2.0.33 and newest
 * [Yii2 Base](https://github.com/wdmg/yii2-base) module (required)
 * [phpMorphy](https://github.com/wdmg/phpmorphy) library
 * [Yii2 Helpers](https://github.com/wdmg/yii2-helpers)
@@ -108,6 +108,7 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [in progress development]
+* v.1.0.8 - Up to date dependencies, bugfix migrations
 * v.1.0.7 - Added support for Blog module
 * v.1.0.6 - Added no caching parameter for search method
 * v.1.0.5 - Added ignored patterns, URL for snippets as closure object
