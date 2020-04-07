@@ -501,6 +501,11 @@ class Search extends ActiveRecord
                             'hash' => $hash
                         ]);
 
+                        if (Yii::$app instanceof \yii\console\Application) {
+                            echo " ";
+                            var_export($search->url);
+                        }
+
                         // Check model
                         if ($search->validate()) {
 
