@@ -1,8 +1,8 @@
 [![Yii2](https://img.shields.io/badge/required-Yii2_v2.0.33-blue.svg)](https://packagist.org/packages/yiisoft/yii2)
-[![Github all releases](https://img.shields.io/github/downloads/wdmg/yii2-search/total.svg)](https://GitHub.com/wdmg/yii2-search/releases/)
+[![Downloads](https://img.shields.io/packagist/dt/wdmg/yii2-search.svg)](https://packagist.org/packages/wdmg/yii2-search)
+[![Packagist Version](https://img.shields.io/packagist/v/wdmg/yii2-search.svg)](https://packagist.org/packages/wdmg/yii2-search)
 ![Progress](https://img.shields.io/badge/progress-in_development-red.svg)
 [![GitHub license](https://img.shields.io/github/license/wdmg/yii2-search.svg)](https://github.com/wdmg/yii2-search/blob/master/LICENSE)
-![GitHub release](https://img.shields.io/github/release/wdmg/yii2-search/all.svg)
 
 # Yii2 Search
 Search module for Yii2.
@@ -108,6 +108,7 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [in progress development]
+* v.1.0.9 - Checking module is loaded
 * v.1.0.8 - Up to date dependencies, bugfix migrations
 * v.1.0.7 - Added support for Blog module
 * v.1.0.6 - Added no caching parameter for search method

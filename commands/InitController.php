@@ -103,37 +103,40 @@ class InitController extends Controller
                         $class = $support['class'];
                         $options = $support['options'];
 
+                        // If class of model exist
                         if (class_exists($class)) {
-                            if ($model = new $class()) {
-                                if ($model instanceof \yii\db\ActiveRecord) {
 
-                                    // Create model query
-                                    $query = $model->find();
+                            $model = new $class();
 
-                                    // Checking, the model may not meet the conditions that allow displaying in search results
-                                    if (isset($options['conditions'])) {
-                                        $query->andWhere($options['conditions']);
-                                    }
+                            // If module is loaded
+                            if ($model->getModule()) {
 
-                                    $search = new Search();
-                                    if ($items = $query->limit(100)->all()) {
-                                        foreach ($items as $item) {
+                                // Create model query
+                                $query = $model->find();
 
-                                            $time = time();
-                                            echo $this->ansiFormat("    - indexing `$item->title` ($context)", Console::FG_YELLOW);
-                                            $code = $search->indexing($item, $context, $options);
-                                            if ($code == 1) {
-                                                $time = time() - $time;
-                                                echo $this->ansiFormat(" - ok, code: $code, time: $time sec.\n", Console::FG_GREEN);
-                                                $count++;
-                                            } elseif ($code == 2 || $code == 0) {
-                                                $time = time() - $time;
-                                                echo $this->ansiFormat(" - skip, code: $code, time: $time sec.\n", Console::FG_YELLOW);
-                                            } else {
-                                                $time = time() - $time;
-                                                echo $this->ansiFormat(" - fail, code: $code, time: $time sec.\n", Console::FG_RED);
-                                                $isOk = false;
-                                            }
+                                // Checking, the model may not meet the conditions that allow displaying in search results
+                                if (isset($options['conditions'])) {
+                                    $query->andWhere($options['conditions']);
+                                }
+
+                                $search = new Search();
+                                if ($items = $query->limit(100)->all()) {
+                                    foreach ($items as $item) {
+
+                                        $time = time();
+                                        echo $this->ansiFormat("    - indexing `$item->title` ($context)", Console::FG_YELLOW);
+                                        $code = $search->indexing($item, $context, $options);
+                                        if ($code == 1) {
+                                            $time = time() - $time;
+                                            echo $this->ansiFormat(" - ok, code: $code, time: $time sec.\n", Console::FG_GREEN);
+                                            $count++;
+                                        } elseif ($code == 2 || $code == 0) {
+                                            $time = time() - $time;
+                                            echo $this->ansiFormat(" - skip, code: $code, time: $time sec.\n", Console::FG_YELLOW);
+                                        } else {
+                                            $time = time() - $time;
+                                            echo $this->ansiFormat(" - fail, code: $code, time: $time sec.\n", Console::FG_RED);
+                                            $isOk = false;
                                         }
                                     }
                                 }

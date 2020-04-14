@@ -29,7 +29,11 @@ class m200202_222306_search extends Migration
             'updated_at' => $this->datetime()->defaultExpression('CURRENT_TIMESTAMP')
         ], $tableOptions);
 
-        $this->createIndex('{{%idx-search}}', '{{%search}}', ['title', 'url(255)', 'hash', 'context', 'updated_at']);
+        if ($this->db->driverName === 'mysql')
+            $this->createIndex('{{%idx-search}}', '{{%search}}', ['title', 'url(255)', 'hash', 'context', 'updated_at']);
+        else
+            $this->createIndex('{{%idx-search}}', '{{%search}}', ['title', 'url', 'hash', 'context', 'updated_at']);
+
         $this->createIndex('{{%idx-search-hash}}', '{{%search}}', ['hash']);
 
     }

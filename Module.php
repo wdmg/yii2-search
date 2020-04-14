@@ -6,7 +6,7 @@ namespace wdmg\search;
  * Yii2 Search
  *
  * @category        Module
- * @version         1.0.8
+ * @version         1.0.9
  * @author          Alexsander Vyshnyvetskyy <alex.vyshnyvetskyy@gmail.com>
  * @link            https://github.com/wdmg/yii2-search
  * @copyright       Copyright (c) 2020 W.D.M.Group, Ukraine
@@ -162,7 +162,7 @@ class Module extends BaseModule
     /**
      * @var string the module version
      */
-    private $version = "1.0.8";
+    private $version = "1.0.9";
 
     /**
      * @var integer, priority of initialization
@@ -246,29 +246,34 @@ class Module extends BaseModule
                         $options = $support['options'];
                         $indexing = $support['indexing'];
 
+                        // If class of model exist
                         if (class_exists($class)) {
 
                             $model = new $class();
-                            $search = new Search();
 
-                            if ($indexing['on_insert']) {
-                                \yii\base\Event::on($class, $model::EVENT_AFTER_INSERT, function ($event) use ($search, $context, $options) {
-                                    $search->indexing($event->sender, $context, $options, 1);
-                                });
+                            // If module is loaded
+                            if ($model->getModule()) {
+                                $search = new Search();
+
+                                if ($indexing['on_insert']) {
+                                    \yii\base\Event::on($class, $model::EVENT_AFTER_INSERT, function ($event) use ($search, $context, $options) {
+                                        $search->indexing($event->sender, $context, $options, 1);
+                                    });
+                                }
+
+                                if ($indexing['on_update']) {
+                                    \yii\base\Event::on($class, $model::EVENT_AFTER_UPDATE, function ($event) use ($search, $context, $options) {
+                                        $search->indexing($event->sender, $context, $options, 2);
+                                    });
+                                }
+
+                                if ($indexing['on_delete']) {
+                                    \yii\base\Event::on($class, $model::EVENT_AFTER_DELETE, function ($event) use ($search, $context, $options) {
+                                        $search->indexing($event->sender, $context, $options, 3);
+                                    });
+                                }
+
                             }
-
-                            if ($indexing['on_update']) {
-                                \yii\base\Event::on($class, $model::EVENT_AFTER_UPDATE, function ($event) use ($search, $context, $options) {
-                                    $search->indexing($event->sender, $context, $options, 2);
-                                });
-                            }
-
-                            if ($indexing['on_delete']) {
-                                \yii\base\Event::on($class, $model::EVENT_AFTER_DELETE, function ($event) use ($search, $context, $options) {
-                                    $search->indexing($event->sender, $context, $options, 3);
-                                });
-                            }
-
                         }
 
                     }
