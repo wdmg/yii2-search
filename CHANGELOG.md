@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 1.0.10 (2020-04-28)
+ * Update README.md and dependencies
+ 
 ## 1.0.9 (2020-04-14)
  * Checking module is loaded
  * Migrations fixed

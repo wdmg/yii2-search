@@ -1,7 +1,7 @@
 [![Yii2](https://img.shields.io/badge/required-Yii2_v2.0.33-blue.svg)](https://packagist.org/packages/yiisoft/yii2)
 [![Downloads](https://img.shields.io/packagist/dt/wdmg/yii2-search.svg)](https://packagist.org/packages/wdmg/yii2-search)
 [![Packagist Version](https://img.shields.io/packagist/v/wdmg/yii2-search.svg)](https://packagist.org/packages/wdmg/yii2-search)
-![Progress](https://img.shields.io/badge/progress-in_development-red.svg)
+![Progress](https://img.shields.io/badge/progress-ready_to_use-green.svg)
 [![GitHub license](https://img.shields.io/github/license/wdmg/yii2-search.svg)](https://github.com/wdmg/yii2-search/blob/master/LICENSE)
 
 # Yii2 Search
@@ -107,7 +107,8 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
         ]);
     ?>
 
-# Status and version [in progress development]
+# Status and version [ready to use]
+* v.1.0.10 - Update README.md and dependencies
 * v.1.0.9 - Checking module is loaded
 * v.1.0.8 - Up to date dependencies, bugfix migrations
 * v.1.0.7 - Added support for Blog module
