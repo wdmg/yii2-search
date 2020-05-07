@@ -4,7 +4,7 @@
   "keywords": ["yii2", "yii2-search", "search", "live search", "wdmg"],
   "type": "yii2-extension",
   "license": "MIT",
-  "version": "1.0.10",
+  "version": "1.1.0",
   "homepage": "https://github.com/wdmg/yii2-search",
   "support": {
     "source": "https://github.com/wdmg/yii2-search",
@@ -26,7 +26,8 @@
     "wdmg/yii2-helpers": "^1.3.1",
     "wdmg/yii2-selectinput": "^1.0.7",
     "wdmg/yii2-validators": "^1.0.5",
-    "wdmg/phpmorphy": "^1.3.0"
+    "wdmg/lingua-stem": "^1.0.1",
+    "wdmg/phpmorphy": "^1.3.1"
   },
   "minimum-stability": "dev",
   "autoload": {
@@ -104,7 +105,7 @@
       },
       "cacheExpire": 86400,
       "indexingOptions": {
-        "processing": "phpMorphy",
+        "processing": "phpmorphy",
         "analyze_by": "relevance",
         "max_execution_time": 0,
         "memory_limit": null,

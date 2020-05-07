@@ -6,7 +6,7 @@ namespace wdmg\search;
  * Yii2 Search
  *
  * @category        Module
- * @version         1.0.10
+ * @version         1.1.0
  * @author          Alexsander Vyshnyvetskyy <alex.vyshnyvetskyy@gmail.com>
  * @link            https://github.com/wdmg/yii2-search
  * @copyright       Copyright (c) 2020 W.D.M.Group, Ukraine
@@ -126,7 +126,7 @@ class Module extends BaseModule
      * @var array indexation options
      */
     public $indexingOptions = [
-        'processing' => 'phpMorphy', //  Set `phpMorphy` or `LinguaStem` (not realized et)
+        'processing' => 'phpmorphy', //  Set `phpmorphy` or `lingua-stem`
         'language' => 'ru-RU', // Support 'ru-RU', 'uk-UA', 'de-DE'
         'analyze_by' => 'relevance',
         'max_execution_time' => 0, // max execution time in sec. for indexing process
@@ -162,7 +162,7 @@ class Module extends BaseModule
     /**
      * @var string the module version
      */
-    private $version = "1.0.10";
+    private $version = "1.1.0";
 
     /**
      * @var integer, priority of initialization
@@ -236,50 +236,6 @@ class Module extends BaseModule
         if (!is_integer($this->cacheExpire))
             throw new InvalidConfigException("Module property `cacheExpire` must be integer.");
 
-        // Attach to events of create/change/remove of models for the search indexing
-        if (!($app instanceof \yii\console\Application)) {
-            if (is_array($models = $this->supportModels)) {
-                foreach ($models as $context => $support) {
-                    if (isset($support['class']) && isset($support['options']) && isset($support['indexing'])) {
-
-                        $class = $support['class'];
-                        $options = $support['options'];
-                        $indexing = $support['indexing'];
-
-                        // If class of model exist
-                        if (class_exists($class)) {
-
-                            $model = new $class();
-
-                            // If module is loaded
-                            if ($model->getModule()) {
-                                $search = new Search();
-
-                                if ($indexing['on_insert']) {
-                                    \yii\base\Event::on($class, $model::EVENT_AFTER_INSERT, function ($event) use ($search, $context, $options) {
-                                        $search->indexing($event->sender, $context, $options, 1);
-                                    });
-                                }
-
-                                if ($indexing['on_update']) {
-                                    \yii\base\Event::on($class, $model::EVENT_AFTER_UPDATE, function ($event) use ($search, $context, $options) {
-                                        $search->indexing($event->sender, $context, $options, 2);
-                                    });
-                                }
-
-                                if ($indexing['on_delete']) {
-                                    \yii\base\Event::on($class, $model::EVENT_AFTER_DELETE, function ($event) use ($search, $context, $options) {
-                                        $search->indexing($event->sender, $context, $options, 3);
-                                    });
-                                }
-
-                            }
-                        }
-
-                    }
-                }
-            }
-        }
     }
 
     public function generateSnippets($content = null, $keywords = null, $options = [], $withBase = true)

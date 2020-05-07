@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 1.1.0 (2020-05-07)
+ * Update dependencies
+ * Added LinguaStem() (support for Porter Stemmer)
+ 
 ## 1.0.10 (2020-04-28)
  * Update README.md and dependencies
  

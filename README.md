@@ -14,6 +14,7 @@ The module implements indexed search using morphology (phpMorphy) or Porter's st
 * Yii2 v.2.0.33 and newest
 * [Yii2 Base](https://github.com/wdmg/yii2-base) module (required)
 * [phpMorphy](https://github.com/wdmg/phpmorphy) library
+* [LinguaStem](https://github.com/wdmg/lingua-stem) library
 * [Yii2 Helpers](https://github.com/wdmg/yii2-helpers)
 
 # Installation
@@ -68,7 +69,7 @@ To add a module to the project, add the following data in your configuration fil
            ],
            'cacheExpire' = 86400, // live search cache lifetime, `0` - for not use cache
            'indexingOptions' = [ // indexation options
-               'processing' => 'phpMorphy', //  Set `phpMorphy` or `LinguaStem` (not support et)
+               'processing' => 'phpMorphy', //  Set `phpMorphy` or `LinguaStem`
                'language' => 'ru-RU', // Support 'ru-RU', 'uk-UA', 'de-DE'
                'analyze_by' => 'relevance',
                'max_execution_time' => 0, // max execution time in sec. for indexing process
@@ -108,6 +109,7 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [ready to use]
+* v.1.1.0 - Added LinguaStem() (support for Porter Stemmer)
 * v.1.0.10 - Update README.md and dependencies
 * v.1.0.9 - Checking module is loaded
 * v.1.0.8 - Up to date dependencies, bugfix migrations

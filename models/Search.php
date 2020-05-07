@@ -9,6 +9,8 @@ use yii\behaviors\TimestampBehavior;
 use wdmg\validators\SerialValidator;
 use wdmg\helpers\TextAnalyzer;
 use wdmg\helpers\ArrayHelper;
+use wdmg\lingua\LinguaStem;
+use wdmg\phpmorphy\phpMorphy;
 
 /**
  * This is the model class for table "{{%search}}".
@@ -115,7 +117,7 @@ class Search extends ActiveRecord
         }
     }
 
-    public function search($request = null) {
+    public function search($request = null, $language = null) {
 
         if (is_null($request))
             return false;
@@ -144,21 +146,49 @@ class Search extends ActiveRecord
 
         }
 
-        //
-        $morphy = new \phpMorphy(null, 'ru_RU', [
-            'storage' => \phpMorphy::STORAGE_FILE,
-            'with_gramtab' => false,
-            'predict_by_suffix' => true,
-            'predict_by_db' => true
-        ]);
+        // Get current language
+        if (is_null($language) && is_null($language = str_replace('-', '_', $this->module->indexingOptions['language']))) {
+            if (isset(Yii::$app->language) && is_null($language))
+                $language = str_replace('-', '_', Yii::$app->language);
+            elseif (!is_null($language))
+                $language = str_replace('-', '_', $language);
+            else
+                $language = Yii::$app->language;
+        } else {
+            $language = str_replace('-', '_', $language);
+        }
+
+        // Get text pre-processor
+        $pre_process = null;
+        if ($processing == 'phpmorphy') {
+            $pre_process = new phpMorphy(null, $language, [
+                'storage' => phpMorphy::STORAGE_FILE,
+                'with_gramtab' => false,
+                'predict_by_suffix' => true,
+                'predict_by_db' => true
+            ]);
+        } else if ($processing == 'lingua-stem') {
+            $pre_process = new LinguaStem($language);
+        }
 
         foreach ($expanded as $key => $keyword) {
             if (mb_strlen($keyword) >= 3) {
-                if ($base = $morphy->lemmatize(mb_strtoupper(str_ireplace("ё", "е", $keyword), "UTF-8"))) {
-                    $this->_keywords[] = mb_strtolower($base[0], "UTF-8");
+                if (!is_null($pre_process)) {
+                    if ($processing == 'phpmorphy') {
+
+                        if ($base = $pre_process->lemmatize(mb_strtoupper(str_ireplace("ё", "е", $keyword), "UTF-8")))
+                            $this->_keywords[] = mb_strtolower($base[0], "UTF-8");
+
+                    } else if ($processing == 'lingua-stem') {
+
+                        if ($base = $pre_process->word($word))
+                            $this->_keywords[] = $base;
+
+                    }
                 } else {
                     $this->_keywords[] = $keyword;
                 }
+
             }
         }
 
@@ -253,7 +283,7 @@ class Search extends ActiveRecord
             $max_words = 50;
 
         if (is_null($processing = $this->module->indexingOptions['processing']))
-            $processing = 'phpMorphy'; // TODO: add support for `LinguaStem`
+            $processing = 'phpmorphy';
 
         if (is_null($analyze_by = $this->module->indexingOptions['analyze_by']))
             $analyze_by = 'relevance';
@@ -407,77 +437,118 @@ class Search extends ActiveRecord
                         // Collection of keywords with the meaning of weights and snippets
                         $collection = [];
 
-                        \Yii::beginProfile('search-indexing-phpmorphy');
-                        $morphy = new \phpMorphy(null, $language, [
-                            'storage' => \phpMorphy::STORAGE_FILE,
-                            'with_gramtab' => false,
-                            'predict_by_suffix' => true,
-                            'predict_by_db' => true
-                        ]);
-
-                        // Get the basic forms of words
-                        foreach ($keywords as $keyword => $stat) {
-
-                            // Skip keywords by ignored words
-                            $skip = false;
-                            if (is_array($ignored)) {
-                                if (in_array($keyword, $ignored)) {
-                                    $skip = true;
-                                    continue;
-                                }
-                            }
-
-                            if ((!$skip) && $base = $morphy->lemmatize(mb_strtoupper(str_ireplace("ё", "е", $keyword), "UTF-8"))) {
-
-                                // Get base word by
-                                $base_word = mb_strtolower($base[0], "UTF-8");
-
-                                // Skip keywords by ignored pattern
-                                $skip = false;
-                                foreach($ignored as $pattern) {
-                                    if (preg_match("/^\/.+\/[a-z]*$/i", $pattern)) {
-                                        if (preg_match($pattern, $base_word)) {
-                                            $skip = true;
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if (!$skip) {
-                                    $collection[] = [
-                                        'keyword' => $keyword,
-                                        'base' => $base_word,
-                                        'weight' => $stat[$analyze_by],
-                                        'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
-                                    ];
-                                }
-
-                            } else {
-
-                                // Skip keywords by ignored pattern
-                                $skip = false;
-                                foreach($ignored as $pattern) {
-                                    if (preg_match("/^\/.+\/[a-z]*$/i", $pattern)) {
-                                        if (preg_match($pattern, $keyword)) {
-                                            $skip = true;
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if (!$skip) {
-                                    $collection[] = [
-                                        'keyword' => $keyword,
-                                        'base' => $keyword,
-                                        'weight' => $stat[$analyze_by],
-                                        'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
-                                    ];
-                                }
-
-                            }
+                        // Get text pre-processor
+                        $pre_process = null;
+                        if ($processing == 'phpmorphy') {
+                            $pre_process = new phpMorphy(null, $language, [
+                                'storage' => phpMorphy::STORAGE_FILE,
+                                'with_gramtab' => false,
+                                'predict_by_suffix' => true,
+                                'predict_by_db' => true
+                            ]);
+                        } else if ($processing == 'lingua-stem') {
+                            $pre_process = new LinguaStem($language);
                         }
-                        \Yii::endProfile('search-indexing-phpmorphy');
 
+
+                        if (!is_null($pre_process)) {
+
+                            \Yii::beginProfile('search-indexing');
+
+                            // Get the basic forms of words
+                            foreach ($keywords as $keyword => $stat) {
+
+                                // Skip keywords by ignored words
+                                $skip = false;
+                                if (is_array($ignored)) {
+                                    if (in_array($keyword, $ignored)) {
+                                        $skip = true;
+                                        continue;
+                                    }
+                                }
+
+                                if ($processing == 'phpmorphy') {
+
+                                    if ((!$skip) && $base = $pre_process->lemmatize(mb_strtoupper(str_ireplace("ё", "е", $keyword), "UTF-8"))) {
+
+                                        // Get base word by
+                                        $base_word = mb_strtolower($base[0], "UTF-8");
+
+                                        // Skip keywords by ignored pattern
+                                        $skip = false;
+                                        foreach($ignored as $pattern) {
+                                            if (preg_match("/^\/.+\/[a-z]*$/i", $pattern)) {
+                                                if (preg_match($pattern, $base_word)) {
+                                                    $skip = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        if (!$skip) {
+                                            $collection[] = [
+                                                'keyword' => $keyword,
+                                                'base' => $base_word,
+                                                'weight' => $stat[$analyze_by],
+                                                'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
+                                            ];
+                                        }
+
+                                    }
+
+                                } else if ($processing == 'lingua-stem') {
+
+                                    if ((!$skip) && $base = $pre_process->word($keyword)) {
+
+                                        // Skip keywords by ignored pattern
+                                        $skip = false;
+                                        foreach($ignored as $pattern) {
+                                            if (preg_match("/^\/.+\/[a-z]*$/i", $pattern)) {
+                                                if (preg_match($pattern, $base)) {
+                                                    $skip = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        if (!$skip) {
+                                            $collection[] = [
+                                                'keyword' => $keyword,
+                                                'base' => $base,
+                                                'weight' => $stat[$analyze_by],
+                                                'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
+                                            ];
+                                        }
+
+                                    }
+
+                                } else {
+
+                                    // Skip keywords by ignored pattern
+                                    $skip = false;
+                                    foreach($ignored as $pattern) {
+                                        if (preg_match("/^\/.+\/[a-z]*$/i", $pattern)) {
+                                            if (preg_match($pattern, $keyword)) {
+                                                $skip = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    if (!$skip) {
+                                        $collection[] = [
+                                            'keyword' => $keyword,
+                                            'base' => $keyword,
+                                            'weight' => $stat[$analyze_by],
+                                            'snippet' => isset($all_snippets[$keyword]) ? $all_snippets[$keyword] : null
+                                        ];
+                                    }
+
+                                }
+                            }
+
+                            \Yii::endProfile('search-indexing');
+                        }
 
                         // Check if there is such a page in the index, if not, add
                         \Yii::beginProfile('search-indexing-save');
@@ -501,6 +572,7 @@ class Search extends ActiveRecord
                             'hash' => $hash
                         ]);
 
+                        // Show indexing URL in console
                         if (Yii::$app instanceof \yii\console\Application) {
                             echo " ";
                             var_export($search->url);
