@@ -10,7 +10,6 @@ use wdmg\validators\SerialValidator;
 use wdmg\helpers\TextAnalyzer;
 use wdmg\helpers\ArrayHelper;
 use wdmg\lingua\LinguaStem;
-use wdmg\phpmorphy\phpMorphy;
 
 /**
  * This is the model class for table "{{%search}}".
@@ -161,8 +160,8 @@ class Search extends ActiveRecord
         // Get text pre-processor
         $pre_process = null;
         if ($processing == 'phpmorphy') {
-            $pre_process = new phpMorphy(null, $language, [
-                'storage' => phpMorphy::STORAGE_FILE,
+            $pre_process = new \phpMorphy(null, $language, [
+                'storage' => \phpMorphy::STORAGE_FILE,
                 'with_gramtab' => false,
                 'predict_by_suffix' => true,
                 'predict_by_db' => true
@@ -440,8 +439,8 @@ class Search extends ActiveRecord
                         // Get text pre-processor
                         $pre_process = null;
                         if ($processing == 'phpmorphy') {
-                            $pre_process = new phpMorphy(null, $language, [
-                                'storage' => phpMorphy::STORAGE_FILE,
+                            $pre_process = new \phpMorphy(null, $language, [
+                                'storage' => \phpMorphy::STORAGE_FILE,
                                 'with_gramtab' => false,
                                 'predict_by_suffix' => true,
                                 'predict_by_db' => true
