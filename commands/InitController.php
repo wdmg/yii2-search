@@ -130,7 +130,7 @@ class InitController extends Controller
 
                                         $time = time();
                                         echo $this->ansiFormat("    - indexing `$item->title` (" . (($locale) ? $context . "/" .$locale : $context) . ")", Console::FG_YELLOW);
-                                        $code = $search->indexing($item, $context, $options, $locale);
+                                        $code = $search->indexing($item, $context, $options, 1, $locale);
                                         if ($code == 1) {
                                             $time = time() - $time;
                                             echo $this->ansiFormat(" - ok, code: $code, time: $time sec.\n", Console::FG_GREEN);

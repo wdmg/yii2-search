@@ -1,7 +1,8 @@
 Changelog
 =========
 
-## 1.1.*
+## 1.1.1 (2020-05-08)
+ * Added flags, fixed indexing by models events
  * Added multi-language support
  * Indexing on create/update events of support models
  

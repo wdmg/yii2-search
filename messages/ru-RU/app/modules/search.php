@@ -70,6 +70,12 @@ return [
     '&larr; Prev page' => '&larr; Предыдущая страница',
     'Next page &rarr;' => 'Следующая страница &rarr;',
 
+    'OK! Material successfully indexed and added to search.' => 'Материал успешно проиндексирован и добавлен в поиск.',
+    'An error occurred while indexing the material.' => 'Произошла ошибка при индексации материала.',
+
+    'OK! Material successfully deleted from search.' => 'Материал успешно удалён из поиска.',
+    'An error occurred while deleteing the material from search.' => 'Произошла ошибка при удалении материала из поиска.',
+
 ];
 
 ?>

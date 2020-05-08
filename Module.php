@@ -6,7 +6,7 @@ namespace wdmg\search;
  * Yii2 Search
  *
  * @category        Module
- * @version         1.1.0
+ * @version         1.1.1
  * @author          Alexsander Vyshnyvetskyy <alex.vyshnyvetskyy@gmail.com>
  * @link            https://github.com/wdmg/yii2-search
  * @copyright       Copyright (c) 2020 W.D.M.Group, Ukraine
@@ -162,7 +162,7 @@ class Module extends BaseModule
     /**
      * @var string the module version
      */
-    private $version = "1.1.0";
+    private $version = "1.1.1";
 
     /**
      * @var integer, priority of initialization
@@ -262,8 +262,19 @@ class Module extends BaseModule
                                 if (isset($event->sender->locale))
                                     $locale = $event->sender->locale;
 
-                                $search->indexing($event->sender, $context, $options, 1, $locale);
+                                $result = $search->indexing($event->sender, $context, $options, 1, $locale);
 
+                                if ($result == 1 || $result == 2) {
+                                    Yii::$app->getSession()->setFlash(
+                                        'success',
+                                        Yii::t('app/modules/search', 'OK! Material successfully indexed and added to search.')
+                                    );
+                                } else if ($result == -1) {
+                                    Yii::$app->getSession()->setFlash(
+                                        'danger',
+                                        Yii::t('app/modules/search', 'An error occurred while indexing the material.')
+                                    );
+                                }
                             });
                         }
 
@@ -274,14 +285,39 @@ class Module extends BaseModule
                                 if (isset($event->sender->locale))
                                     $locale = $event->sender->locale;
 
-                                $search->indexing($event->sender, $context, $options, 2, $locale);
+                                $result = $search->indexing($event->sender, $context, $options, 2, $locale);
+
+                                if ($result == 1 || $result == 2) {
+                                    Yii::$app->getSession()->setFlash(
+                                        'success',
+                                        Yii::t('app/modules/search', 'OK! Material successfully indexed and added to search.')
+                                    );
+                                } else if ($result == -1) {
+                                    Yii::$app->getSession()->setFlash(
+                                        'danger',
+                                        Yii::t('app/modules/search', 'An error occurred while indexing the material.')
+                                    );
+                                }
 
                             });
                         }
 
                         if ($indexing['on_delete']) {
                             \yii\base\Event::on($class, $model::EVENT_AFTER_DELETE, function ($event) use ($search, $context, $options) {
-                                $search->indexing($event->sender, $context, $options, 3);
+
+                                $result = $search->indexing($event->sender, $context, $options, 3);
+
+                                if ($result == 1 || $result == 2) {
+                                    Yii::$app->getSession()->setFlash(
+                                        'success',
+                                        Yii::t('app/modules/search', 'OK! Material successfully deleted from search.')
+                                    );
+                                } else if ($result == -1) {
+                                    Yii::$app->getSession()->setFlash(
+                                        'danger',
+                                        Yii::t('app/modules/search', 'An error occurred while deleteing the material from search.')
+                                    );
+                                }
                             });
                         }
                     }

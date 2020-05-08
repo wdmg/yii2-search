@@ -1,5 +1,6 @@
 <?php
 
+use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
@@ -10,6 +11,12 @@ use wdmg\widgets\SelectInput;
 
 $this->title = Yii::t('app/modules/search', 'Search index');
 $this->params['breadcrumbs'][] = $this->title;
+
+if (isset(Yii::$app->translations) && class_exists('\wdmg\translations\FlagsAsset')) {
+    $bundle = \wdmg\translations\FlagsAsset::register(Yii::$app->view);
+} else {
+    $bundle = false;
+}
 
 ?>
 <div class="page-header">
@@ -72,7 +79,43 @@ $this->params['breadcrumbs'][] = $this->title;
                     return $output;
                 }
             ],
-            //'snippets',
+            [
+                'attribute' => 'locale',
+                'label' => Yii::t('app/modules/search','Language'),
+                'format' => 'raw',
+                'filter' => false,
+                'headerOptions' => [
+                    'class' => 'text-center',
+                    'style' => 'min-width:96px;'
+                ],
+                'contentOptions' => [
+                    'class' => 'text-center'
+                ],
+                'value' => function($data) use ($bundle) {
+
+                    if (isset(Yii::$app->translations)) {
+
+                        $locale = Yii::$app->translations->parseLocale($data->locale, Yii::$app->language);
+
+                        if (!($country = $locale['domain']))
+                            $country = '_unknown';
+
+                        return \yii\helpers\Html::img($bundle->baseUrl . '/flags-iso/flat/24/' . $country . '.png', [
+                            'alt' => $locale['name']
+                        ]);
+
+                    } else {
+
+                        if (extension_loaded('intl'))
+                            return mb_convert_case(trim(\Locale::getDisplayLanguage($data->locale, Yii::$app->language)), MB_CASE_TITLE, "UTF-8");
+                        else
+                            return $data->locale;
+
+                    }
+
+                    return null;
+                }
+            ],
             'created_at',
             'updated_at',
             [

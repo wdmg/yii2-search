@@ -109,6 +109,9 @@ class Search extends ActiveRecord
         ];
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function afterFind()
     {
         parent::afterFind();
@@ -117,6 +120,22 @@ class Search extends ActiveRecord
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function beforeValidate()
+    {
+        if (is_array($this->snippets))
+            $this->snippets = serialize($this->snippets);
+
+        return parent::beforeValidate();
+    }
+
+    /**
+     * @param null $request
+     * @param null $locale
+     * @return array|bool|ActiveRecord[]|null
+     */
     public function search($request = null, $locale = null) {
 
         if (is_null($request))
@@ -456,7 +475,6 @@ class Search extends ActiveRecord
                             $pre_process = new LinguaStem($locale);
                         }
 
-
                         if (!is_null($pre_process)) {
 
                             \Yii::beginProfile('search-indexing');
@@ -558,15 +576,11 @@ class Search extends ActiveRecord
 
                         // Check if there is such a page in the index, if not, add
                         \Yii::beginProfile('search-indexing-save');
+
+                        // Create a new instance or update exist
                         if (self::find()->where(['url' => $url])->exists()) {
                             $search = self::find()->where(['url' => $url])->one();
-
-                            // If the hashes match, then the content has not changed - stop
-                            if ($hash == $search->hash)
-                                return 2;
-
                         } else {
-                            // Create a new instance of the model
                             $search = new self();
                         }
 
@@ -590,6 +604,7 @@ class Search extends ActiveRecord
 
                             // First, save the page data model, because we need her id
                             if ($search->save()) {
+
 
                                 $isOk = true;
                                 $item_id = $search->id;
@@ -645,12 +660,19 @@ class Search extends ActiveRecord
                                 }
 
                                 // Save the resulting snippets
-                                $search->snippets = serialize($snippets);
-                                if ($search->update() && $isOk)
-                                    return 1;
-                                else
-                                    return -1;
+                                $search->snippets = $snippets;
 
+                                // Update search index
+                                if ($isOk) {
+                                    $count = $search->update();
+                                    if ($count)
+                                        return 1;
+                                    else if ($count == 0)
+                                        return 2;
+                                    else
+                                        return -1;
+
+                                }
                             }
                         }
 
@@ -659,6 +681,33 @@ class Search extends ActiveRecord
                 } else {
                     return -1;
                 }
+            }
+
+        } else if ($action == 3) {
+
+
+
+            // Required URL attribute for search results
+            $url = null;
+            if (isset($options['url'])) {
+                if (!is_string($options['url']) && is_callable($options['url'])) {
+                    $url = $options['url']($model);
+                } else {
+
+                    if (!($url = $model->getAttribute($options['url'])))
+                        $url = $model[$options['url']];
+
+                }
+            }
+
+            if (self::find()->where(['context' => $context, 'url' => $url])->exists()) {
+                $search = self::find()->where(['context' => $context, 'url' => $url])->one();
+
+                if ($search->delete())
+                    return 1;
+                else
+                    return -1;
+
             }
 
         }
@@ -686,10 +735,16 @@ class Search extends ActiveRecord
 
     public function getSnippetsCount() {
 
-        if (is_countable($this->snippets))
+        if (is_countable($this->snippets)) {
             return count($this->snippets);
-        else
-            return 0;
+        } elseif (is_string($this->snippets)) {
+
+            if (SerialValidator::isValid($this->snippets))
+                return count(unserialize($this->snippets));
+
+        }
+
+        return 0;
     }
 
     public function getKeywordsCount() {
@@ -716,16 +771,6 @@ class Search extends ActiveRecord
             $isOk = false;
 
         if ($isOk) {
-
-            /*$query = (new \yii\db\Query())->createCommand()->truncateTable(SearchIndex::tableName());
-            $query->execute();
-
-            $query = (new \yii\db\Query())->createCommand()->truncateTable(SearchKeywords::tableName());
-            $query->execute();
-
-            $query = (new \yii\db\Query())->createCommand()->truncateTable(self::tableName());
-            $query->execute();*/
-
             return $count;
         } else {
             return false;
