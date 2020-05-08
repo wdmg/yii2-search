@@ -236,6 +236,58 @@ class Module extends BaseModule
         if (!is_integer($this->cacheExpire))
             throw new InvalidConfigException("Module property `cacheExpire` must be integer.");
 
+
+        // Attach to events of create/change/remove of models for search indexing process
+        if (!$this->isConsole() && is_array($models = $this->supportModels)) {
+
+            $search = new Search();
+
+            foreach ($models as $context => $support) {
+
+                if (isset($support['class']) && isset($support['options'])) {
+
+                    $class = $support['class'];
+                    $options = $support['options'];
+
+                    // If class of model exist
+                    if (class_exists($class) && isset($support['indexing'])) {
+
+                        $model = new $class();
+                        $indexing = $support['indexing'];
+
+                        if ($indexing['on_insert']) {
+                            \yii\base\Event::on($class, $model::EVENT_AFTER_INSERT, function ($event) use ($search, $context, $options) {
+
+                                $locale = null;
+                                if (isset($event->sender->locale))
+                                    $locale = $event->sender->locale;
+
+                                $search->indexing($event->sender, $context, $options, 1, $locale);
+
+                            });
+                        }
+
+                        if ($indexing['on_update']) {
+                            \yii\base\Event::on($class, $model::EVENT_AFTER_UPDATE, function ($event) use ($search, $context, $options) {
+
+                                $locale = null;
+                                if (isset($event->sender->locale))
+                                    $locale = $event->sender->locale;
+
+                                $search->indexing($event->sender, $context, $options, 2, $locale);
+
+                            });
+                        }
+
+                        if ($indexing['on_delete']) {
+                            \yii\base\Event::on($class, $model::EVENT_AFTER_DELETE, function ($event) use ($search, $context, $options) {
+                                $search->indexing($event->sender, $context, $options, 3);
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public function generateSnippets($content = null, $keywords = null, $options = [], $withBase = true)

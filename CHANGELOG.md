@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 1.1.*
+ * Added multi-language support
+ * Indexing on create/update events of support models
+ 
 ## 1.1.0 (2020-05-07)
  * Update dependencies
  * Added LinguaStem() (support for Porter Stemmer)

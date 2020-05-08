@@ -81,6 +81,7 @@ class Search extends ActiveRecord
             [['title'], 'string', 'max' => 255],
             [['url'], 'url'],
             [['context'], 'string', 'max' => 24],
+            [['locale'], 'string', 'max' => 10],
             [['snippets'], 'string'],
 
             ['query', 'string', 'max' => 128],
@@ -116,7 +117,7 @@ class Search extends ActiveRecord
         }
     }
 
-    public function search($request = null, $language = null) {
+    public function search($request = null, $locale = null) {
 
         if (is_null($request))
             return false;
@@ -146,28 +147,31 @@ class Search extends ActiveRecord
         }
 
         // Get current language
-        if (is_null($language) && is_null($language = str_replace('-', '_', $this->module->indexingOptions['language']))) {
-            if (isset(Yii::$app->language) && is_null($language))
-                $language = str_replace('-', '_', Yii::$app->language);
-            elseif (!is_null($language))
-                $language = str_replace('-', '_', $language);
+        if (is_null($locale)) {
+
+            if (!is_null($this->module->indexingOptions['language']))
+                $locale = $this->module->indexingOptions['language'];
+            elseif (!is_null(Yii::$app->language))
+                $locale = Yii::$app->language;
             else
-                $language = Yii::$app->language;
-        } else {
-            $language = str_replace('-', '_', $language);
+                $locale = Yii::$app->sourceLanguage;
+
         }
 
         // Get text pre-processor
         $pre_process = null;
         if ($processing == 'phpmorphy') {
-            $pre_process = new \phpMorphy(null, $language, [
-                'storage' => \phpMorphy::STORAGE_FILE,
-                'with_gramtab' => false,
-                'predict_by_suffix' => true,
-                'predict_by_db' => true
+            $pre_process = new \phpMorphy(
+                null,
+                str_replace('-', '_', $locale),
+                [
+                    'storage' => \phpMorphy::STORAGE_FILE,
+                    'with_gramtab' => false,
+                    'predict_by_suffix' => true,
+                    'predict_by_db' => true
             ]);
         } else if ($processing == 'lingua-stem') {
-            $pre_process = new LinguaStem($language);
+            $pre_process = new LinguaStem($locale);
         }
 
         foreach ($expanded as $key => $keyword) {
@@ -261,21 +265,21 @@ class Search extends ActiveRecord
      * @param null $context
      * @param null $options
      * @param int $action
-     * @param string $language, 'uk_UA', 'ru_RU' etc.
+     * @param string $locale, 'uk_UA', 'ru_RU' etc.
      * @return int, state where: -1 - has error occurred, 0 - no indexing, 1 - success indexing, 2 - already in index (not updated)
      */
-    public function indexing($model = null, $context = null, $options = null, $action = 1, $language = null) {
+    public function indexing($model = null, $context = null, $options = null, $action = 1, $locale = null) {
 
         // Get language
-        if (is_null($language) && is_null($language = str_replace('-', '_', $this->module->indexingOptions['language']))) {
-            if (isset(Yii::$app->language) && is_null($language))
-                $language = str_replace('-', '_', Yii::$app->language);
-            elseif (!is_null($language))
-                $language = str_replace('-', '_', $language);
+        if (is_null($locale)) {
+
+            if (!is_null($this->module->indexingOptions['language']))
+                $locale = $this->module->indexingOptions['language'];
+            elseif (!is_null(Yii::$app->language))
+                $locale = Yii::$app->language;
             else
-                $language = 'ru_RU';
-        } else {
-            $language = str_replace('-', '_', $language);
+                $locale = Yii::$app->sourceLanguage;
+
         }
 
         if (is_null($max_words = $this->module->indexingOptions['max_words']))
@@ -439,14 +443,17 @@ class Search extends ActiveRecord
                         // Get text pre-processor
                         $pre_process = null;
                         if ($processing == 'phpmorphy') {
-                            $pre_process = new \phpMorphy(null, $language, [
-                                'storage' => \phpMorphy::STORAGE_FILE,
-                                'with_gramtab' => false,
-                                'predict_by_suffix' => true,
-                                'predict_by_db' => true
+                            $pre_process = new \phpMorphy(
+                                null,
+                                str_replace('-', '_', $locale),
+                                [
+                                    'storage' => \phpMorphy::STORAGE_FILE,
+                                    'with_gramtab' => false,
+                                    'predict_by_suffix' => true,
+                                    'predict_by_db' => true
                             ]);
                         } else if ($processing == 'lingua-stem') {
-                            $pre_process = new LinguaStem($language);
+                            $pre_process = new LinguaStem($locale);
                         }
 
 
@@ -568,7 +575,8 @@ class Search extends ActiveRecord
                             'title' => $title,
                             'url' => $url,
                             'context' => $context,
-                            'hash' => $hash
+                            'hash' => $hash,
+                            'locale' => $locale,
                         ]);
 
                         // Show indexing URL in console

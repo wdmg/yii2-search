@@ -124,9 +124,13 @@ class InitController extends Controller
                                 if ($items = $query->limit(100)->all()) {
                                     foreach ($items as $item) {
 
+                                        $locale = null;
+                                        if (isset($item->locale))
+                                            $locale = $item->locale;
+
                                         $time = time();
-                                        echo $this->ansiFormat("    - indexing `$item->title` ($context)", Console::FG_YELLOW);
-                                        $code = $search->indexing($item, $context, $options);
+                                        echo $this->ansiFormat("    - indexing `$item->title` (" . (($locale) ? $context . "/" .$locale : $context) . ")", Console::FG_YELLOW);
+                                        $code = $search->indexing($item, $context, $options, $locale);
                                         if ($code == 1) {
                                             $time = time() - $time;
                                             echo $this->ansiFormat(" - ok, code: $code, time: $time sec.\n", Console::FG_GREEN);
