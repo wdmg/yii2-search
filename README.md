@@ -1,17 +1,23 @@
-[![Yii2](https://img.shields.io/badge/required-Yii2_v2.0.33-blue.svg)](https://packagist.org/packages/yiisoft/yii2)
+[![Yii2](https://img.shields.io/badge/required-Yii2_v2.0.35-blue.svg)](https://packagist.org/packages/yiisoft/yii2)
 [![Downloads](https://img.shields.io/packagist/dt/wdmg/yii2-search.svg)](https://packagist.org/packages/wdmg/yii2-search)
 [![Packagist Version](https://img.shields.io/packagist/v/wdmg/yii2-search.svg)](https://packagist.org/packages/wdmg/yii2-search)
 ![Progress](https://img.shields.io/badge/progress-ready_to_use-green.svg)
 [![GitHub license](https://img.shields.io/github/license/wdmg/yii2-search.svg)](https://github.com/wdmg/yii2-search/blob/master/LICENSE)
+
+<img src="./docs/images/yii2-search.png" width="100%" alt="Yii2 Search module" />
 
 # Yii2 Search
 Search module for Yii2.
 
 The module implements indexed search using morphology (phpMorphy) or Porter's stemmer algorithm (LinguaStem). A live full-text search by data model is also provided.
 
+This module is an integral part of the [Butterfly.СMS](https://butterflycms.com/) content management system, but can also be used as an standalone extension.
+
+Copyrights (c) 2019-2020 [W.D.M.Group, Ukraine](https://wdmg.com.ua/)
+
 # Requirements 
 * PHP 5.6 or higher
-* Yii2 v.2.0.33 and newest
+* Yii2 v.2.0.35 and newest
 * [Yii2 Base](https://github.com/wdmg/yii2-base) module (required)
 * [phpMorphy](https://github.com/wdmg/phpmorphy) library
 * [LinguaStem](https://github.com/wdmg/lingua-stem) library
@@ -109,6 +115,7 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [ready to use]
+* v.1.1.2 - Update dependencies, README.md
 * v.1.1.1 - Added multi-language support, events of support models
 * v.1.1.0 - Added LinguaStem() (support for Porter Stemmer)
 * v.1.0.10 - Update README.md and dependencies

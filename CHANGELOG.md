@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 1.1.2 (2020-06-28)
+ * Update dependencies, README.md
+
 ## 1.1.1 (2020-05-08)
  * Added flags, fixed indexing by models events
  * Added multi-language support
