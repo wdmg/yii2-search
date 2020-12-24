@@ -115,6 +115,7 @@ Use the `Module::dashboardNavItems()` method of the module to generate a navigat
     ?>
 
 # Status and version [ready to use]
+* v.1.1.3 - Update dependencies
 * v.1.1.2 - Update dependencies, README.md
 * v.1.1.1 - Added multi-language support, events of support models
 * v.1.1.0 - Added LinguaStem() (support for Porter Stemmer)

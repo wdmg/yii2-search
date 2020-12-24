@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 1.1.3 (2020-12-24)
+ * Update dependencies
+ 
 ## 1.1.2 (2020-06-28)
  * Update dependencies, README.md
 
