@@ -102,7 +102,6 @@ class LiveSearch extends \yii\base\Model
 
         $results = null;
         if (!empty($request) && is_array($this->module->supportModels)) {
-
             foreach ($this->module->supportModels as $context => $support) {
 
                 if (isset($support['class']) && isset($support['options'])) {
@@ -258,8 +257,9 @@ class LiveSearch extends \yii\base\Model
         $output = [];
         if (is_array($results)) {
             foreach ($results as $result) {
-                $result = array_values ($result);
-                $output = ArrayHelper::crossMerging($output, $result);
+                $result = array_values($result);
+                //$output = ArrayHelper::crossMerging($output, $result);
+                $output = \array_merge_recursive($output, $result);
             }
         }
 

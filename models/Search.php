@@ -748,7 +748,11 @@ class Search extends ActiveRecord
     }
 
     public function getKeywordsCount() {
-        return SearchIndex::find()->where(['item_id' => $this->id])->groupBy('keyword_id')->count();
+        return SearchIndex::find()
+            ->select("keyword_id")
+            ->where(['item_id' => $this->id])
+            ->groupBy('keyword_id')
+            ->count();
     }
 
     /**

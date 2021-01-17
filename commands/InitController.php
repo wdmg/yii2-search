@@ -73,10 +73,10 @@ class InitController extends Controller
             // Checking UrlManager component
             if ($urlManager = Yii::$app->getUrlManager()) {
 
-                if (is_null($urlManager->hostInfo))
+                if (is_null($urlManager->getHostInfo()))
                     echo $this->ansiFormat("\nError! `hostInfo` must be configured in the UrlManager component.\n", Console::FG_RED);
 
-                if (is_null($urlManager->baseUrl))
+                if (is_null($urlManager->getBaseUrl()))
                     echo $this->ansiFormat("\nError! `baseUrl` must be configured in the UrlManager component.\n", Console::FG_RED);
 
             } else {

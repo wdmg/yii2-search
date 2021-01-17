@@ -26,9 +26,9 @@ class m200202_223255_search_ignored extends Migration
             'status' => $this->tinyInteger(1)->null()->defaultValue(1),
 
             'created_at' => $this->dateTime()->defaultExpression('CURRENT_TIMESTAMP'),
-            'created_by' => $this->integer(11)->notNull()->defaultValue(0),
+            'created_by' => $this->integer(11)->null(),
             'updated_at' => $this->datetime()->defaultExpression('CURRENT_TIMESTAMP'),
-            'updated_by' => $this->integer(11)->notNull()->defaultValue(0),
+            'updated_by' => $this->integer(11)->null(),
 
         ], $tableOptions);
 

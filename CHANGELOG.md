@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 1.1.4 (2021-01-17)
+ * Fixed mysql syntax error: 1055 for MySQL >= 5.7
+    
 ## 1.1.3 (2020-12-24)
  * Update dependencies
  
