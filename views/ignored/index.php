@@ -78,7 +78,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         return Html::a('<span class="glyphicon glyphicon-pencil"></span>',
                             Url::toRoute(['ignored/update', 'id' => $data['id']]), [
                                 'title' => Yii::t('app/modules/search', 'Update pattern'),
-                                'class' => 'add-ingored-pattern',
                                 'data-toggle' => 'addIngoredForm',
                                 'data-id' => $key,
                                 'data-pjax' => '1'
@@ -106,51 +105,77 @@ $this->params['breadcrumbs'][] = $this->title;
     <hr/>
     <div>
         <?= Html::a(Yii::t('app/modules/search', 'Add pattern'), ['ignored/create'], [
-            'class' => 'btn btn-success pull-right add-ingored-pattern',
+            'class' => 'btn btn-add btn-success pull-right',
+            'data' => [
+                'toggle' => 'modal',
+                'target' => '#addIngoredModal',
+                'pjax' => 0
+            ]
         ]) ?>
     </div>
     <?php Pjax::end(); ?>
 </div>
 
-<?php $this->registerJs(
-    'var $container = $("#searchIgnoredAjax");
+<?php
+$this->registerJs(<<< JS
+
+    var container = $("#searchIgnoredAjax");
     var requestURL = window.location.href;
-    if ($container.length > 0) {
-        $container.delegate(\'[data-toggle="button-switcher"] button\', \'click\', function() {
-            var id = $(this).parent(\'.btn-group\').data(\'id\');
-            var value = $(this).data(\'value\');
+    if (container.length > 0) {
+        container.delegate('[data-toggle="button-switcher"] button', 'click', function() {
+            var id = $(this).parent('.btn-group').data('id');
+            var value = $(this).data('value');
             let url = new URL(requestURL);
-            url.searchParams.set(\'change\', \'status\');            
+            url.searchParams.set('change', 'status');            
             $.ajax({
                 type: "POST",
                 url: url.toString(),
-                dataType: \'json\',
-                data: {\'id\': id, \'value\': value},
+                dataType: 'json',
+                data: {'id': id, 'value': value},
                 complete: function(data) {
-                    $.pjax.reload({type:\'POST\', container:\'#searchIgnoredAjax\'});
+                    $.pjax.reload({type:'POST', container:'#searchIgnoredAjax'});
                 }
             });
         });
     }
-    ', \yii\web\View::POS_READY
-); ?>
+    
+JS
+, \yii\web\View::POS_READY); ?>
 
-<?php $this->registerJs(<<< JS
-    $('body').delegate('.add-ingored-pattern', 'click', function(event) {
+<?php
+$this->registerJs(<<< JS
+
+    $('body').delegate('[data-toggle="modal"][data-target]', 'click', function(event) {
+        
         event.preventDefault();
+        var target = $(event.target).data('target');
         $.get(
             $(this).attr('href'),
             function (data) {
-                $('#addIngoredForm .modal-body').html(data);
-                $('#addIngoredForm').modal();
-            }
+                
+                $(target).find('.modal-body').html($(data).remove('.modal-footer'));
+                if ($(data).find('.modal-footer').length > 0) {
+                    $(target).find('.modal-footer').remove();
+                    $(target).find('.modal-content').append($(data).find('.modal-footer'));
+                }
+                
+                if ($(target).find('button[type="submit"]').length > 0 && $(target).find('form').length > 0) {
+                    $(target).find('button[type="submit"]').on('click', function(event) {
+                        event.preventDefault();
+                        $(target).find('form').submit();
+                    });
+                }
+                
+                $(target).modal();
+            }  
         );
     });
+
 JS
 ); ?>
 
 <?php Modal::begin([
-    'id' => 'addIngoredForm',
+    'id' => 'addIngoredModal',
     'header' => '<h4 class="modal-title">'.Yii::t('app/modules/search', 'Add new pattern').'</h4>',
     'clientOptions' => [
         'show' => false

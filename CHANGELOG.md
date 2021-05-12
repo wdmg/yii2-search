@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## 1.1.*
+ * Show modal call fixed
+ 
 ## 1.1.4 (2021-01-17)
  * Fixed mysql syntax error: 1055 for MySQL >= 5.7
     
