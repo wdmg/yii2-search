@@ -735,7 +735,7 @@ class Search extends ActiveRecord
 
     public function getSnippetsCount() {
 
-        if (is_countable($this->snippets)) {
+        if (is_array($this->snippets)) {
             return count($this->snippets);
         } elseif (is_string($this->snippets)) {
 

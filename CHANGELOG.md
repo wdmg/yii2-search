@@ -1,7 +1,8 @@
 Changelog
 =========
 
-## 1.1.*
+## 2.0.0 (2023-06-25)
+ * Update copyrights, fix nav menu
  * Show modal call fixed
  
 ## 1.1.4 (2021-01-17)
